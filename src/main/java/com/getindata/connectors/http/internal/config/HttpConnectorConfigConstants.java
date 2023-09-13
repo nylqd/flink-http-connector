@@ -95,4 +95,9 @@ public final class HttpConnectorConfigConstants {
         GID_CONNECTOR_HTTP + "sink.request.batch.size";
 
     // ---------------------------------------------
+
+    // ------ Sink request submitter settings ------
+    public static final String HEADER_REQUEST_TIMEOUT_SECONDS = "request.timeout.seconds";
+
+    // ---------------------------------------------
 }

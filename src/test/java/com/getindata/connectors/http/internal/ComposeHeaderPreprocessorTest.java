@@ -13,8 +13,8 @@ public class ComposeHeaderPreprocessorTest {
         "Basic dXNlcjpwYXNzd29yZA==, Basic dXNlcjpwYXNzd29yZA=="
     })
     public void testNoPreprocessors(String rawValue, String expectedValue) {
-        var noPreprocessorHeaderPreprocessor = new ComposeHeaderPreprocessor(null);
-        var obtainedValue = noPreprocessorHeaderPreprocessor
+        ComposeHeaderPreprocessor noPreprocessorHeaderPreprocessor = new ComposeHeaderPreprocessor(null);
+        String obtainedValue = noPreprocessorHeaderPreprocessor
             .preprocessValueForHeader("someHeader", rawValue);
         assertThat(obtainedValue).isEqualTo(expectedValue);
     }

@@ -1,13 +1,14 @@
 package com.getindata.connectors.http.internal.sink.httpclient;
 
-import java.util.List;
-
 import lombok.Data;
+import okhttp3.Request;
+
+import java.util.List;
 
 @Data
 public class HttpRequest {
 
-    public final java.net.http.HttpRequest httpRequest;
+    public final Request request;
 
     public final List<byte[]> elements;
 

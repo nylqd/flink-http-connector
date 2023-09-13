@@ -1,8 +1,8 @@
 package com.getindata.connectors.http.internal.table.lookup.querycreators;
 
-import java.math.BigDecimal;
-import java.util.List;
-
+import com.getindata.connectors.http.internal.table.lookup.LookupRow;
+import com.getindata.connectors.http.internal.table.lookup.RowDataSingleValueLookupSchemaEntry;
+import com.getindata.connectors.http.internal.table.lookup.RowTypeLookupSchemaEntry;
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.data.DecimalData;
 import org.apache.flink.table.data.GenericRowData;
@@ -10,12 +10,12 @@ import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.types.DataType;
 import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.getindata.connectors.http.internal.table.lookup.LookupRow;
-import com.getindata.connectors.http.internal.table.lookup.RowDataSingleValueLookupSchemaEntry;
-import com.getindata.connectors.http.internal.table.lookup.RowTypeLookupSchemaEntry;
+import java.math.BigDecimal;
+import java.util.Arrays;
+
 import static com.getindata.connectors.http.internal.table.lookup.HttpLookupTableSourceFactory.row;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class GenericGetQueryCreatorTest {
 
@@ -33,8 +33,8 @@ public class GenericGetQueryCreatorTest {
         GenericRowData lookupDataRow = GenericRowData.of(StringData.fromString("val1"));
 
         // WHEN
-        var queryCreator = new GenericGetQueryCreator(lookupRow);
-        var createdQuery = queryCreator.createLookupQuery(lookupDataRow);
+        GenericGetQueryCreator queryCreator = new GenericGetQueryCreator(lookupRow);
+        String createdQuery = queryCreator.createLookupQuery(lookupDataRow);
 
         // THEN
         assertThat(createdQuery).isEqualTo("key1=val1");
@@ -65,8 +65,8 @@ public class GenericGetQueryCreatorTest {
                 decimalValue.scale()));
 
         // WHEN
-        var queryCreator = new GenericGetQueryCreator(lookupRow);
-        var createdQuery = queryCreator.createLookupQuery(lookupDataRow);
+        GenericGetQueryCreator queryCreator = new GenericGetQueryCreator(lookupRow);
+        String createdQuery = queryCreator.createLookupQuery(lookupDataRow);
 
         // THEN
         assertThat(createdQuery).isEqualTo("key1=10");
@@ -94,7 +94,7 @@ public class GenericGetQueryCreatorTest {
                 ));
 
         lookupRow.setLookupPhysicalRowDataType(
-            row(List.of(
+            row(Arrays.asList(
                 DataTypes.FIELD("key1", DataTypes.STRING()),
                 DataTypes.FIELD("key2", DataTypes.STRING()),
                 DataTypes.FIELD("key3", DataTypes.STRING())
@@ -107,8 +107,8 @@ public class GenericGetQueryCreatorTest {
         );
 
         // WHEN
-        var queryCreator = new GenericGetQueryCreator(lookupRow);
-        var createdQuery = queryCreator.createLookupQuery(lookupDataRow);
+        GenericGetQueryCreator queryCreator = new GenericGetQueryCreator(lookupRow);
+        String createdQuery = queryCreator.createLookupQuery(lookupDataRow);
 
         // THEN
         assertThat(createdQuery).isEqualTo("key1=val1&key2=val2&key3=3");
@@ -146,7 +146,7 @@ public class GenericGetQueryCreatorTest {
 
         // ROW<col1, Row<col2, col3>>
         lookupRow.setLookupPhysicalRowDataType(
-            row(List.of(
+            row(Arrays.asList(
                     DataTypes.FIELD("col1", DataTypes.STRING()),
                     DataTypes.FIELD(
                         "aRow",
@@ -168,8 +168,8 @@ public class GenericGetQueryCreatorTest {
         );
 
         // WHEN
-        var queryCreator = new GenericGetQueryCreator(lookupRow);
-        var createdQuery = queryCreator.createLookupQuery(lookupDataRow);
+        GenericGetQueryCreator queryCreator = new GenericGetQueryCreator(lookupRow);
+        String createdQuery = queryCreator.createLookupQuery(lookupDataRow);
 
         // THEN
         assertThat(createdQuery).isEqualTo("col1=val1&col2=val2&col3=val3");

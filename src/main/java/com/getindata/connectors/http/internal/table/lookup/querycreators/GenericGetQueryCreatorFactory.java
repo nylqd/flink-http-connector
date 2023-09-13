@@ -1,13 +1,13 @@
 package com.getindata.connectors.http.internal.table.lookup.querycreators;
 
-import java.util.Set;
-
-import org.apache.flink.configuration.ConfigOption;
-import org.apache.flink.configuration.ReadableConfig;
-
 import com.getindata.connectors.http.LookupQueryCreator;
 import com.getindata.connectors.http.LookupQueryCreatorFactory;
 import com.getindata.connectors.http.internal.table.lookup.LookupRow;
+import org.apache.flink.configuration.ConfigOption;
+import org.apache.flink.configuration.ReadableConfig;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Factory for creating {@link GenericGetQueryCreator}.
@@ -30,11 +30,11 @@ public class GenericGetQueryCreatorFactory implements LookupQueryCreatorFactory 
 
     @Override
     public Set<ConfigOption<?>> requiredOptions() {
-        return Set.of();
+        return new HashSet<>();
     }
 
     @Override
     public Set<ConfigOption<?>> optionalOptions() {
-        return Set.of();
+        return new HashSet<>();
     }
 }

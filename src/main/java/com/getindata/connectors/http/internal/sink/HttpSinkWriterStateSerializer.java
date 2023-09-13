@@ -1,10 +1,10 @@
 package com.getindata.connectors.http.internal.sink;
 
+import org.apache.flink.connector.base.sink.writer.AsyncSinkWriterStateSerializer;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-
-import org.apache.flink.connector.base.sink.writer.AsyncSinkWriterStateSerializer;
 
 /**
  * An implementation of {@link AsyncSinkWriterStateSerializer} for {@link HttpSinkInternal} and its
@@ -23,8 +23,8 @@ public class HttpSinkWriterStateSerializer
     @Override
     protected HttpSinkRequestEntry deserializeRequestFromStream(long requestSize,
         DataInputStream in) throws IOException {
-        var method = in.readUTF();
-        var bytes = new byte[(int) requestSize];
+        String method = in.readUTF();
+        byte[] bytes = new byte[(int) requestSize];
         in.read(bytes);
         return new HttpSinkRequestEntry(method, bytes);
     }

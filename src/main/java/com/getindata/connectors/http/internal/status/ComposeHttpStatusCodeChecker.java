@@ -1,11 +1,6 @@
 package com.getindata.connectors.http.internal.status;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.Set;
-import java.util.stream.Collectors;
-
+import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -13,7 +8,11 @@ import lombok.RequiredArgsConstructor;
 import org.apache.flink.util.Preconditions;
 import org.apache.flink.util.StringUtils;
 
-import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * An implementation of {@link HttpStatusCodeChecker} that checks Http Status code against
@@ -22,10 +21,10 @@ import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstant
 public class ComposeHttpStatusCodeChecker implements HttpStatusCodeChecker {
 
     private static final Set<HttpStatusCodeChecker> DEFAULT_ERROR_CODES =
-        Set.of(
-            new TypeStatusCodeChecker(HttpResponseCodeType.CLIENT_ERROR),
-            new TypeStatusCodeChecker(HttpResponseCodeType.SERVER_ERROR)
-        );
+            new HashSet<>(Arrays.asList(
+                    new TypeStatusCodeChecker(HttpResponseCodeType.CLIENT_ERROR),
+                    new TypeStatusCodeChecker(HttpResponseCodeType.SERVER_ERROR)
+            ));
 
     private static final int MIN_HTTP_STATUS_CODE = 100;
 
@@ -50,25 +49,26 @@ public class ComposeHttpStatusCodeChecker implements HttpStatusCodeChecker {
      * This implementation checks if status code matches any single value mask like "404"
      * or http type mask such as "4XX". Code that matches one of those masks and is not on a
      * white list will be considered as error code.
+     *
      * @param statusCode http status code to assess.
      * @return true if status code is considered as error or false if not.
      */
     public boolean isErrorCode(int statusCode) {
 
         Preconditions.checkArgument(
-            statusCode >= MIN_HTTP_STATUS_CODE,
-            String.format(
-                "Provided invalid Http status code %s,"
-                    + " status code should be equal or bigger than %d.",
-                statusCode,
-                MIN_HTTP_STATUS_CODE)
+                statusCode >= MIN_HTTP_STATUS_CODE,
+                String.format(
+                        "Provided invalid Http status code %s,"
+                                + " status code should be equal or bigger than %d.",
+                        statusCode,
+                        MIN_HTTP_STATUS_CODE)
         );
 
         boolean isWhiteListed = excludedCodes.stream()
-            .anyMatch(check -> check.isWhiteListed(statusCode));
+                .anyMatch(check -> check.isWhiteListed(statusCode));
 
         return !isWhiteListed
-            && errorCodes.stream()
+                && errorCodes.stream()
                 .anyMatch(httpStatusCodeChecker -> httpStatusCodeChecker.isErrorCode(statusCode));
     }
 
@@ -79,7 +79,7 @@ public class ComposeHttpStatusCodeChecker implements HttpStatusCodeChecker {
         String errorCodePrefix = config.getErrorCodePrefix();
 
         String errorCodes =
-            properties.getProperty(errorCodePrefix, "");
+                properties.getProperty(errorCodePrefix, "");
 
         if (StringUtils.isNullOrWhitespaceOnly(errorCodes)) {
             return DEFAULT_ERROR_CODES;
@@ -101,9 +101,9 @@ public class ComposeHttpStatusCodeChecker implements HttpStatusCodeChecker {
             if (!StringUtils.isNullOrWhitespaceOnly(sCode)) {
                 String trimCode = sCode.toUpperCase().trim();
                 Preconditions.checkArgument(
-                    trimCode.length() == 3,
-                    "Status code should contain three characters. Provided [%s]",
-                    trimCode);
+                        trimCode.length() == 3,
+                        "Status code should contain three characters. Provided [%s]",
+                        trimCode);
 
                 // at this point we have trim, upper case 3 character status code.
                 if (isTypeCode(trimCode)) {
@@ -111,7 +111,7 @@ public class ComposeHttpStatusCodeChecker implements HttpStatusCodeChecker {
                     errorCodes.add(new TypeStatusCodeChecker(HttpResponseCodeType.getByCode(code)));
                 } else {
                     errorCodes.add(
-                        new SingleValueHttpStatusCodeChecker(Integer.parseInt(trimCode))
+                            new SingleValueHttpStatusCodeChecker(Integer.parseInt(trimCode))
                     );
                 }
             }
@@ -126,13 +126,13 @@ public class ComposeHttpStatusCodeChecker implements HttpStatusCodeChecker {
         String whiteListPrefix = config.getWhiteListPrefix();
 
         return Arrays.stream(
-                properties.getProperty(whiteListPrefix, "")
-                    .split(HttpConnectorConfigConstants.PROP_DELIM))
-            .filter(sCode -> !StringUtils.isNullOrWhitespaceOnly(sCode))
-            .map(String::trim)
-            .mapToInt(Integer::parseInt)
-            .mapToObj(WhiteListHttpStatusCodeChecker::new)
-            .collect(Collectors.toSet());
+                        properties.getProperty(whiteListPrefix, "")
+                                .split(HttpConnectorConfigConstants.PROP_DELIM))
+                .filter(sCode -> !StringUtils.isNullOrWhitespaceOnly(sCode))
+                .map(String::trim)
+                .mapToInt(Integer::parseInt)
+                .mapToObj(WhiteListHttpStatusCodeChecker::new)
+                .collect(Collectors.toSet());
     }
 
     /**

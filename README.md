@@ -1,5 +1,16 @@
 # flink-http-connector
 
+## Read this section first
+
+**Tips**: This repo is forked from [getindata/flink-http-connector](https://github.com/getindata/flink-http-connector), plan to make following tweaks
+
+- [x] switch from JDK11 HttpClient to OkHttp
+- [x] downgrade JDK to 1.8
+- [ ] implement scan source
+
+
+## Original README
+
 [![Maven Central](https://img.shields.io/maven-central/v/com.getindata/flink-http-connector)](https://mvnrepository.com/artifact/com.getindata/flink-http-connector)
 [![javadoc](https://javadoc.io/badge2/com.getindata/flink-http-connector/javadoc.svg)](https://javadoc.io/doc/com.getindata/flink-http-connector) 
 

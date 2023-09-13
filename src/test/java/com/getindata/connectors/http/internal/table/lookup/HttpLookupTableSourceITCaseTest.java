@@ -1,15 +1,5 @@
 package com.getindata.connectors.http.internal.table.lookup;
 
-import java.io.File;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -33,15 +23,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.matching;
-import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.put;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
@@ -123,7 +111,7 @@ public class HttpLookupTableSourceITCaseTest {
             setUpServerBodyStub(
                 methodName,
                 wireMockServer,
-                List.of(matchingJsonPath("$.id"), matchingJsonPath("$.id2"))
+                Arrays.asList(matchingJsonPath("$.id"), matchingJsonPath("$.id2"))
             );
         }
 
@@ -249,7 +237,7 @@ public class HttpLookupTableSourceITCaseTest {
         setUpServerBodyStub(
             "POST",
             wireMockServer,
-            List.of(
+            Arrays.asList(
                 matchingJsonPath("$.row.aStringColumn"),
                 matchingJsonPath("$.row.anIntColumn"),
                 matchingJsonPath("$.row.aFloatColumn")
@@ -318,7 +306,7 @@ public class HttpLookupTableSourceITCaseTest {
         setUpServerBodyStub(
             "POST",
             wireMockServer,
-            List.of(
+            Arrays.asList(
                 matchingJsonPath("$.enrichedString"),
                 matchingJsonPath("$.row.aStringColumn"),
                 matchingJsonPath("$.row.anIntColumn"),
@@ -389,7 +377,7 @@ public class HttpLookupTableSourceITCaseTest {
         setUpServerBodyStub(
             "POST",
             wireMockServer,
-            List.of(
+            Arrays.asList(
                 matchingJsonPath("$.nestedRow.aStringColumn"),
                 matchingJsonPath("$.nestedRow.anIntColumn"),
                 matchingJsonPath("$.nestedRow.aRow.anotherStringColumn"),
@@ -461,7 +449,7 @@ public class HttpLookupTableSourceITCaseTest {
         setUpServerBodyStub(
             "POST",
             wireMockServer,
-            List.of(
+            Arrays.asList(
                 matchingJsonPath("$.bool"),
                 matchingJsonPath("$.tinyint"),
                 matchingJsonPath("$.smallint"),

@@ -1,8 +1,9 @@
 package com.getindata.connectors.http.internal.table.sink;
 
-import java.util.Properties;
-import java.util.Set;
-
+import com.getindata.connectors.http.HttpPostRequestCallbackFactory;
+import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
+import com.getindata.connectors.http.internal.sink.httpclient.HttpRequest;
+import com.getindata.connectors.http.internal.utils.ConfigUtils;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ReadableConfig;
 import org.apache.flink.connector.base.table.AsyncDynamicTableSinkFactory;
@@ -10,10 +11,11 @@ import org.apache.flink.connector.base.table.sink.options.AsyncSinkConfiguration
 import org.apache.flink.table.connector.sink.DynamicTableSink;
 import org.apache.flink.table.factories.FactoryUtil;
 
-import com.getindata.connectors.http.HttpPostRequestCallbackFactory;
-import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
-import com.getindata.connectors.http.internal.sink.httpclient.HttpRequest;
-import com.getindata.connectors.http.internal.utils.ConfigUtils;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
+
 import static com.getindata.connectors.http.internal.table.sink.HttpDynamicSinkConnectorOptions.*;
 
 /**
@@ -74,12 +76,12 @@ public class HttpDynamicTableSinkFactory extends AsyncDynamicTableSinkFactory {
 
     @Override
     public Set<ConfigOption<?>> requiredOptions() {
-        return Set.of(URL, FactoryUtil.FORMAT);
+        return new HashSet<>(Arrays.asList(URL, FactoryUtil.FORMAT));
     }
 
     @Override
     public Set<ConfigOption<?>> optionalOptions() {
-        var options = super.optionalOptions();
+        Set<ConfigOption<?>> options = super.optionalOptions();
         options.add(INSERT_METHOD);
         options.add(REQUEST_CALLBACK_IDENTIFIER);
         return options;
@@ -88,7 +90,7 @@ public class HttpDynamicTableSinkFactory extends AsyncDynamicTableSinkFactory {
     private void validateHttpSinkOptions(ReadableConfig tableOptions)
         throws IllegalArgumentException {
         tableOptions.getOptional(INSERT_METHOD).ifPresent(insertMethod -> {
-            if (!Set.of("POST", "PUT").contains(insertMethod)) {
+            if (!new HashSet<>(Arrays.asList("POST", "PUT")).contains(insertMethod)) {
                 throw new IllegalArgumentException(
                     String.format(
                         "Invalid option '%s'. It is expected to be either 'POST' or 'PUT'.",

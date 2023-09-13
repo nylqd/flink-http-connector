@@ -1,15 +1,15 @@
 package com.getindata.connectors.http.internal.table.sink;
 
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import lombok.extern.slf4j.Slf4j;
-
 import com.getindata.connectors.http.HttpPostRequestCallback;
 import com.getindata.connectors.http.internal.sink.httpclient.HttpRequest;
 import com.getindata.connectors.http.internal.utils.ConfigUtils;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.Response;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * A {@link HttpPostRequestCallback} that logs pairs of request and response as <i>INFO</i> level
@@ -23,7 +23,7 @@ public class Slf4jHttpPostRequestCallback implements HttpPostRequestCallback<Htt
 
     @Override
     public void call(
-        HttpResponse<String> response,
+        Response response,
         HttpRequest requestEntry,
         String endpointUrl,
         Map<String, String> headerMap) {
@@ -40,14 +40,18 @@ public class Slf4jHttpPostRequestCallback implements HttpPostRequestCallback<Htt
                 requestBody
             );
         } else {
-            log.info(
-                "Got response for a request.\n  Request:\n    " +
-                "Method: {}\n    Body: {}\n  Response: {}\n    Body: {}",
-                requestEntry.method,
-                requestBody,
-                response,
-                response.body().replaceAll(ConfigUtils.UNIVERSAL_NEW_LINE_REGEXP, "")
-            );
+            try {
+                log.info(
+                    "Got response for a request.\n  Request:\n    " +
+                    "Method: {}\n    Body: {}\n  Response: {}\n    Body: {}",
+                    requestEntry.method,
+                    requestBody,
+                    response,
+                    response.body().string().replaceAll(ConfigUtils.UNIVERSAL_NEW_LINE_REGEXP, "")
+                );
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

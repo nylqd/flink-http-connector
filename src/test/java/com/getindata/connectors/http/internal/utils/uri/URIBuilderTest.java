@@ -1,17 +1,18 @@
 package com.getindata.connectors.http.internal.utils.uri;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
-import java.util.stream.Stream;
-
+import com.getindata.connectors.http.LookupArg;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.getindata.connectors.http.LookupArg;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Stream;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class URIBuilderTest {
 
@@ -46,18 +47,18 @@ class URIBuilderTest {
     public static Stream<Arguments> uriArgs() {
         return Stream.of(
             Arguments.of(
-                List.of(new LookupArg("id", "1"), new LookupArg("name", "2")),
+                Arrays.asList(new LookupArg("id", "1"), new LookupArg("name", "2")),
                 "?id=1&name=2"),
-            Arguments.of(List.of(new LookupArg("id", ""), new LookupArg("name", "")),
+            Arguments.of(Arrays.asList(new LookupArg("id", ""), new LookupArg("name", "")),
                 "?id=&name="),
             Arguments.of(
-                List.of(new LookupArg("id", " "), new LookupArg("name", " ")),
+                Arrays.asList(new LookupArg("id", " "), new LookupArg("name", " ")),
                 "?id=+&name=+"),
             Arguments.of(
-                List.of(new LookupArg("id", null), new LookupArg("name", null)),
+                Arrays.asList(new LookupArg("id", null), new LookupArg("name", null)),
                 "?id&name"),
             Arguments.of(
-                List.of(new LookupArg("id", "1"), new LookupArg("name", "what+%25+is+in+HTTP+URL")),
+                Arrays.asList(new LookupArg("id", "1"), new LookupArg("name", "what+%25+is+in+HTTP+URL")),
                 "?id=1&name=what%2B%2525%2Bis%2Bin%2BHTTP%2BURL")
         );
     }

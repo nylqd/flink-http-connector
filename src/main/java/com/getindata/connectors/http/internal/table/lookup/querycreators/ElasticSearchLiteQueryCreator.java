@@ -39,9 +39,9 @@ public class ElasticSearchLiteQueryCreator implements LookupQueryCreator {
 
         Collection<LookupArg> lookupArgs = lookupRow.convertToLookupArgs(lookupDataRow);
 
-        var luceneQuery = lookupArgs.stream()
-            .map(ElasticSearchLiteQueryCreator::processLookupArg)
-            .collect(Collectors.joining(ENCODED_SPACE + "AND" + ENCODED_SPACE));
+        String luceneQuery = lookupArgs.stream()
+                .map(ElasticSearchLiteQueryCreator::processLookupArg)
+                .collect(Collectors.joining(ENCODED_SPACE + "AND" + ENCODED_SPACE));
 
         return luceneQuery.isEmpty() ? "" : ("q=" + luceneQuery);
     }

@@ -1,20 +1,14 @@
 package com.getindata.connectors.http.internal.sink.httpclient;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpClient.Version;
-import java.net.http.HttpRequest.BodyPublishers;
-import java.net.http.HttpRequest.Builder;
-import java.net.http.HttpResponse;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
-
-import lombok.extern.slf4j.Slf4j;
-
 import com.getindata.connectors.http.internal.sink.HttpSinkRequestEntry;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * This implementation creates HTTP requests for every processed event.
@@ -24,57 +18,56 @@ public class PerRequestSubmitter extends AbstractRequestSubmitter {
 
     public PerRequestSubmitter(
             Properties properties,
-            String[] headersAndValues,
-            HttpClient httpClient) {
+            Map<String, String> headerMap,
+            OkHttpClient okHttpClient) {
 
-        super(properties, headersAndValues, httpClient);
+        super(properties, headerMap, okHttpClient);
     }
 
     @Override
-    public List<CompletableFuture<JavaNetHttpResponseWrapper>> submit(
+    public List<CompletableFuture<OkHttpResponseWrapper>> submit(
             String endpointUrl,
             List<HttpSinkRequestEntry> requestToSubmit) {
 
-        var endpointUri = URI.create(endpointUrl);
-        var responseFutures = new ArrayList<CompletableFuture<JavaNetHttpResponseWrapper>>();
+        ArrayList<CompletableFuture<OkHttpResponseWrapper>> responseFutures = new ArrayList<>();
 
-        for (var entry : requestToSubmit) {
-            HttpRequest httpRequest = buildHttpRequest(entry, endpointUri);
-            var response = httpClient
-                .sendAsync(
-                    httpRequest.getHttpRequest(),
-                    HttpResponse.BodyHandlers.ofString())
-                .exceptionally(ex -> {
-                    // TODO This will be executed on a ForkJoinPool Thread... refactor this someday.
-                    log.error("Request fatally failed because of an exception", ex);
-                    return null;
-                })
-                .thenApplyAsync(
-                    res -> new JavaNetHttpResponseWrapper(httpRequest, res),
-                    publishingThreadPool
-                );
+        for (HttpSinkRequestEntry httpSinkRequestEntry : requestToSubmit) {
+            HttpRequest httpRequest = buildHttpRequest(httpSinkRequestEntry, endpointUrl);
+
+            OkHttpResponseFuture callback = new OkHttpResponseFuture();
+            okHttpClient.newCall(httpRequest.getRequest()).enqueue(callback);
+
+            CompletableFuture<OkHttpResponseWrapper> response = callback.future
+                    .exceptionally(ex -> {
+                        // TODO This will be executed on a ForkJoinPool Thread... refactor this someday.
+                        log.error("Request fatally failed because of an exception", ex);
+                        return null;
+                    })
+                    .thenApplyAsync(
+                            res -> new OkHttpResponseWrapper(httpRequest, res),
+                            publishingThreadPool
+                    );
+
             responseFutures.add(response);
         }
         return responseFutures;
     }
 
-    private HttpRequest buildHttpRequest(HttpSinkRequestEntry requestEntry, URI endpointUri) {
-        Builder requestBuilder = java.net.http.HttpRequest
-            .newBuilder()
-            .uri(endpointUri)
-            .version(Version.HTTP_1_1)
-            .timeout(Duration.ofSeconds(httpRequestTimeOutSeconds))
-            .method(requestEntry.method,
-                BodyPublishers.ofByteArray(requestEntry.element));
+    private HttpRequest buildHttpRequest(HttpSinkRequestEntry requestEntry, String endpointUrl) {
 
-        if (headersAndValues.length != 0) {
-            requestBuilder.headers(headersAndValues);
+        Request.Builder builder = new Request.Builder()
+                .url(endpointUrl)
+                .method(requestEntry.method,
+                        RequestBody.create(requestEntry.element, MediaType.parse("application/json")));
+
+        if (!headerMap.isEmpty()) {
+            this.headerMap.forEach(builder::addHeader);
         }
 
         return new HttpRequest(
-            requestBuilder.build(),
-            List.of(requestEntry.element),
-            requestEntry.method
+                builder.build(),
+                Collections.singletonList(requestEntry.element),
+                requestEntry.method
         );
     }
 }

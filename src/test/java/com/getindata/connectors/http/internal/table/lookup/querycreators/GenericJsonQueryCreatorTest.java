@@ -1,7 +1,5 @@
 package com.getindata.connectors.http.internal.table.lookup.querycreators;
 
-import java.util.List;
-
 import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.formats.json.JsonFormatFactory;
@@ -16,9 +14,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Arrays;
 
 import static com.getindata.connectors.http.internal.table.lookup.HttpLookupTableSourceFactory.row;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 class GenericJsonQueryCreatorTest {
@@ -31,7 +31,7 @@ class GenericJsonQueryCreatorTest {
     @BeforeEach
     public void setUp() {
 
-        DataType lookupPhysicalDataType = row(List.of(
+        DataType lookupPhysicalDataType = row(Arrays.asList(
                 DataTypes.FIELD("id", DataTypes.INT()),
                 DataTypes.FIELD("uuid", DataTypes.STRING())
             )

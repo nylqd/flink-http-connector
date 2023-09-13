@@ -1,13 +1,9 @@
 package com.getindata.connectors.http;
 
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
-
+import com.getindata.connectors.http.internal.sink.httpclient.HttpRequest;
+import com.getindata.connectors.http.internal.table.sink.HttpDynamicTableSinkFactory;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import okhttp3.Response;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.assertj.core.api.Assertions;
@@ -15,12 +11,16 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+
+import static com.getindata.connectors.http.TestPostRequestCallbackFactory.TEST_POST_REQUEST_CALLBACK_IDENT;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import com.getindata.connectors.http.internal.sink.httpclient.HttpRequest;
-import com.getindata.connectors.http.internal.table.sink.HttpDynamicTableSinkFactory;
-import static com.getindata.connectors.http.TestPostRequestCallbackFactory.TEST_POST_REQUEST_CALLBACK_IDENT;
 
 public class HttpPostRequestCallbackFactoryTest {
     private static final int SERVER_PORT = 9090;
@@ -30,7 +30,7 @@ public class HttpPostRequestCallbackFactoryTest {
     protected StreamTableEnvironment tEnv;
 
     private static final ArrayList<HttpRequest> requestEntries = new ArrayList<>();
-    private static final ArrayList<HttpResponse<String>> responses = new ArrayList<>();
+    private static final ArrayList<Response> responses = new ArrayList<>();
 
     @BeforeEach
     public void setup() {
@@ -90,7 +90,7 @@ public class HttpPostRequestCallbackFactoryTest {
     public static class TestPostRequestCallback implements HttpPostRequestCallback<HttpRequest> {
         @Override
         public void call(
-            HttpResponse<String> response,
+            Response response,
             HttpRequest requestEntry,
             String endpointUrl,
             Map<String, String> headerMap

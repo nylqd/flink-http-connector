@@ -1,11 +1,7 @@
 package com.getindata.connectors.http.internal.table.lookup;
 
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
+import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
+import com.getindata.connectors.http.internal.utils.ConfigUtils;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ReadableConfig;
@@ -20,12 +16,14 @@ import org.apache.flink.table.factories.DeserializationFormatFactory;
 import org.apache.flink.table.factories.DynamicTableSourceFactory;
 import org.apache.flink.table.factories.FactoryUtil;
 import org.apache.flink.table.types.DataType;
+
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import static com.getindata.connectors.http.internal.table.lookup.HttpLookupConnectorOptions.*;
 import static org.apache.flink.table.api.DataTypes.FIELD;
 import static org.apache.flink.table.types.utils.DataTypeUtils.removeTimeAttribute;
-
-import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
-import com.getindata.connectors.http.internal.utils.ConfigUtils;
-import static com.getindata.connectors.http.internal.table.lookup.HttpLookupConnectorOptions.*;
 
 public class HttpLookupTableSourceFactory implements DynamicTableSourceFactory {
 
@@ -82,12 +80,12 @@ public class HttpLookupTableSourceFactory implements DynamicTableSourceFactory {
 
     @Override
     public Set<ConfigOption<?>> requiredOptions() {
-        return Set.of(URL, FactoryUtil.FORMAT);
+        return new HashSet<>(Arrays.asList(URL, FactoryUtil.FORMAT));
     }
 
     @Override
     public Set<ConfigOption<?>> optionalOptions() {
-        return Set.of(URL_ARGS, ASYNC_POLLING, LOOKUP_METHOD);
+        return new HashSet<>(Arrays.asList(URL_ARGS, ASYNC_POLLING, LOOKUP_METHOD));
     }
 
     private HttpLookupConfig getHttpLookupOptions(Context context, ReadableConfig readableConfig) {

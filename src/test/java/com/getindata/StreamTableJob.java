@@ -23,24 +23,47 @@ public class StreamTableJob {
         StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
 
         tableEnv.executeSql(
-            "CREATE TABLE Orders (id STRING, id2 STRING, proc_time AS PROCTIME())"
-                + " WITH ("
-                + "'connector' = 'datagen', 'rows-per-second' = '1', 'fields.id.kind' = 'sequence',"
-                + " 'fields.id.start' = '1', 'fields.id.end' = '120',"
-                + " 'fields.id2.kind' = 'sequence', 'fields.id2.start' = '2',"
-                + " 'fields.id2.end' = '120')"
+                "CREATE TABLE Orders (id STRING, id2 STRING, proc_time AS PROCTIME()\n" +
+                        ") WITH (\n" +
+                        "'connector' = 'datagen', \n" +
+                        "'rows-per-second' = '1', \n" +
+                        "'fields.id.kind' = 'sequence', \n" +
+                        "'fields.id.start' = '1', \n" +
+                        "'fields.id.end' = '120', \n" +
+                        "'fields.id2.kind' = 'sequence', \n" +
+                        "'fields.id2.start' = '2', \n" +
+                        "'fields.id2.end' = '120'\n" +
+                        ")"
         );
         tableEnv.executeSql(
-            "CREATE TABLE Customers (id STRING, id2 STRING, msg STRING, uuid STRING, isActive STRING, balance STRING) WITH ('connector' = 'rest-lookup', 'url' = 'http://localhost:8080/client', "
-                + "'asyncPolling' = 'true', "
-                + "'field.isActive.path' = '$.details.isActive', "
-                + "'field.balance.path' = '$.details.nestedDetails.balance')");
+                "CREATE TABLE Customers (\n" +
+                        "\tid STRING,\n" +
+                        "\tid2 STRING,\n" +
+                        "\tmsg STRING,\n" +
+                        "\tuuid STRING,\n" +
+                        "\tdetails ROW<\n" +
+                        "\t  isActive BOOLEAN,\n" +
+                        "\t  nestedDetails ROW<\n" +
+                        "\t    balance STRING\n" +
+                        "\t  >\n" +
+                        "\t>\n" +
+                        ") WITH (\n" +
+                        "'connector' = 'rest-lookup',\n" +
+                        "'format' = 'json',\n" +
+                        "'url' = 'http://localhost:8080/client', \n" +
+                        "'asyncPolling' = 'true'\n" +
+                        ")");
+
+//        tableEnv.executeSql(
+//                "CREATE TABLE Customers (id STRING, id2 STRING, msg STRING, uuid STRING, isActive STRING, balance STRING) WITH ('connector' = 'rest-lookup', 'url' = 'http://localhost:8080/client',
+//                "
+//                        + "'asyncPolling' = 'true', "
+//                        + "'format' = 'json')");
 
         Table resultTable =
-            tableEnv.sqlQuery(
-                "SELECT o.id, o.id2, c.msg, c.uuid, c.isActive, c.balance FROM Orders AS o "
-                    + "JOIN Customers FOR SYSTEM_TIME AS OF o.proc_time AS c "
-                    + "ON o.id = c.id AND o.id2 = c.id2");
+                tableEnv.sqlQuery(
+                        "SELECT o.id, o.id2, c.msg, c.uuid, c.isActive, c.balance FROM Orders AS o JOIN Customers FOR" +
+                                " SYSTEM_TIME AS OF o.proc_time AS c ON o.id = c.id AND o.id2 = c.id2");
 
         /* DataStream<Row> rowDataStream = tableEnv.toDataStream(resultTable);
         rowDataStream.print();*/

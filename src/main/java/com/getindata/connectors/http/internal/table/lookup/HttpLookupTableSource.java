@@ -1,8 +1,12 @@
 package com.getindata.connectors.http.internal.table.lookup;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.getindata.connectors.http.LookupQueryCreator;
+import com.getindata.connectors.http.LookupQueryCreatorFactory;
+import com.getindata.connectors.http.internal.HeaderPreprocessor;
+import com.getindata.connectors.http.internal.PollingClientFactory;
+import com.getindata.connectors.http.internal.table.lookup.querycreators.GenericGetQueryCreatorFactory;
+import com.getindata.connectors.http.internal.table.lookup.querycreators.GenericJsonQueryCreatorFactory;
+import com.getindata.connectors.http.internal.utils.HttpHeaderUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.table.api.DataTypes;
@@ -22,13 +26,9 @@ import org.apache.flink.table.types.logical.RowType;
 import org.apache.flink.table.types.logical.RowType.RowField;
 import org.apache.flink.table.types.logical.utils.LogicalTypeChecks;
 
-import com.getindata.connectors.http.LookupQueryCreator;
-import com.getindata.connectors.http.LookupQueryCreatorFactory;
-import com.getindata.connectors.http.internal.HeaderPreprocessor;
-import com.getindata.connectors.http.internal.PollingClientFactory;
-import com.getindata.connectors.http.internal.table.lookup.querycreators.GenericGetQueryCreatorFactory;
-import com.getindata.connectors.http.internal.table.lookup.querycreators.GenericJsonQueryCreatorFactory;
-import com.getindata.connectors.http.internal.utils.HttpHeaderUtils;
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.getindata.connectors.http.internal.table.lookup.HttpLookupConnectorOptions.LOOKUP_QUERY_CREATOR_IDENTIFIER;
 import static com.getindata.connectors.http.internal.table.lookup.HttpLookupTableSourceFactory.row;
 
@@ -141,7 +141,7 @@ public class HttpLookupTableSource
                 lookupConfig
             );
 
-        return new JavaNetHttpPollingClientFactory(requestFactory);
+        return new OkHttpPollingClientFactory(requestFactory);
     }
 
     private LookupRow extractLookupRow(int[][] keys) {

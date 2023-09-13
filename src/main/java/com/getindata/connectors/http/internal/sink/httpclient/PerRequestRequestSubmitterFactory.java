@@ -1,13 +1,13 @@
 package com.getindata.connectors.http.internal.sink.httpclient;
 
+import com.getindata.connectors.http.internal.utils.OkHttpClientFactory;
+import com.getindata.connectors.http.internal.utils.ThreadUtils;
+import org.apache.flink.util.concurrent.ExecutorThreadFactory;
+
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import org.apache.flink.util.concurrent.ExecutorThreadFactory;
-
-import com.getindata.connectors.http.internal.utils.JavaNetHttpClientFactory;
-import com.getindata.connectors.http.internal.utils.ThreadUtils;
 
 public class PerRequestRequestSubmitterFactory implements RequestSubmitterFactory {
 
@@ -16,7 +16,7 @@ public class PerRequestRequestSubmitterFactory implements RequestSubmitterFactor
     int HTTP_CLIENT_THREAD_POOL_SIZE = 1;
 
     @Override
-    public RequestSubmitter createSubmitter(Properties properties, String[] headersAndValues) {
+    public RequestSubmitter createSubmitter(Properties properties, Map<String, String> headerMap) {
 
         ExecutorService httpClientExecutor =
             Executors.newFixedThreadPool(
@@ -26,8 +26,8 @@ public class PerRequestRequestSubmitterFactory implements RequestSubmitterFactor
 
         return new PerRequestSubmitter(
                 properties,
-                headersAndValues,
-                JavaNetHttpClientFactory.createClient(properties, httpClientExecutor)
+                headerMap,
+                OkHttpClientFactory.createClient(properties, httpClientExecutor)
             );
     }
 }

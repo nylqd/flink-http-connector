@@ -1,17 +1,20 @@
 package com.getindata.connectors.http.internal.table.sink;
 
-import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.io.File;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -98,11 +101,11 @@ public class PerRequestHttpDynamicSinkInsertTest {
             + "TIMESTAMP '2021-08-24 15:22:59')";
         tEnv.executeSql(insert).await();
 
-        var postedRequests =
+        List<LoggedRequest> postedRequests =
             wireMockServer.findAll(anyRequestedFor(urlPathEqualTo("/myendpoint")));
         assertEquals(1, postedRequests.size());
 
-        var request = postedRequests.get(0);
+        LoggedRequest request = postedRequests.get(0);
         assertEquals(
             "{\"id\":1,\"first_name\":\"Ninette\",\"last_name\":\"Clee\","
                 + "\"gender\":\"Female\",\"stock\":\"CDZI\",\"currency\":\"RUB\","
@@ -150,16 +153,16 @@ public class PerRequestHttpDynamicSinkInsertTest {
             + "TIMESTAMP '2021-10-24 20:53:54')";
         tEnv.executeSql(insert).await();
 
-        var postedRequests = wireMockServer.findAll(anyRequestedFor(urlPathEqualTo("/myendpoint")));
+        List<LoggedRequest> postedRequests = wireMockServer.findAll(anyRequestedFor(urlPathEqualTo("/myendpoint")));
         assertEquals(2, postedRequests.size());
 
-        var jsonRequests = new HashSet<>(Set.of(
-            "{\"id\":1,\"first_name\":\"Ninette\",\"last_name\":\"Clee\",\"gender\":\"Female\","
-                + "\"stock\":\"CDZI\",\"currency\":\"RUB\",\"tx_date\":\"2021-08-24 15:22:59\"}",
-            "{\"id\":2,\"first_name\":\"Hedy\",\"last_name\":\"Hedgecock\",\"gender\":\"Female\","
-                + "\"stock\":\"DGICA\",\"currency\":\"CNY\",\"tx_date\":\"2021-10-24 20:53:54\"}"
+        HashSet<String> jsonRequests = new HashSet<>(Arrays.asList(
+                "{\"id\":1,\"first_name\":\"Ninette\",\"last_name\":\"Clee\",\"gender\":\"Female\","
+                        + "\"stock\":\"CDZI\",\"currency\":\"RUB\",\"tx_date\":\"2021-08-24 15:22:59\"}",
+                "{\"id\":2,\"first_name\":\"Hedy\",\"last_name\":\"Hedgecock\",\"gender\":\"Female\","
+                        + "\"stock\":\"DGICA\",\"currency\":\"CNY\",\"tx_date\":\"2021-10-24 20:53:54\"}"
         ));
-        for (var request : postedRequests) {
+        for (LoggedRequest request : postedRequests) {
             assertEquals(RequestMethod.PUT, request.getMethod());
             assertEquals(contentTypeHeaderValue, request.getHeader("Content-Type"));
             assertTrue(jsonRequests.contains(request.getBodyAsString()));
@@ -193,10 +196,10 @@ public class PerRequestHttpDynamicSinkInsertTest {
         final String insert = "INSERT INTO http VALUES ('Clee')";
         tEnv.executeSql(insert).await();
 
-        var postedRequests = wireMockServer.findAll(anyRequestedFor(urlPathEqualTo("/myendpoint")));
+        List<LoggedRequest> postedRequests = wireMockServer.findAll(anyRequestedFor(urlPathEqualTo("/myendpoint")));
         assertEquals(1, postedRequests.size());
 
-        var request = postedRequests.get(0);
+        LoggedRequest request = postedRequests.get(0);
         assertEquals("Clee", request.getBodyAsString());
         assertEquals(RequestMethod.POST, request.getMethod());
         assertEquals(contentTypeHeaderValue, request.getHeader("Content-Type"));
@@ -236,10 +239,10 @@ public class PerRequestHttpDynamicSinkInsertTest {
         final String insert = "INSERT INTO http VALUES ('Clee')";
         tEnv.executeSql(insert).await();
 
-        var postedRequests = wireMockServer.findAll(anyRequestedFor(urlPathEqualTo("/myendpoint")));
+        List<LoggedRequest> postedRequests = wireMockServer.findAll(anyRequestedFor(urlPathEqualTo("/myendpoint")));
         assertEquals(1, postedRequests.size());
 
-        var request = postedRequests.get(0);
+        LoggedRequest request = postedRequests.get(0);
         assertEquals("Clee", request.getBodyAsString());
         assertEquals(RequestMethod.POST, request.getMethod());
         assertEquals(contentTypeHeaderValue, request.getHeader("Content-Type"));
@@ -293,11 +296,11 @@ public class PerRequestHttpDynamicSinkInsertTest {
             + "TIMESTAMP '2021-08-24 15:22:59')";
         tEnv.executeSql(insert).await();
 
-        var postedRequests =
+        List<LoggedRequest> postedRequests =
             wireMockServer.findAll(anyRequestedFor(urlPathEqualTo("/myendpoint")));
         assertEquals(1, postedRequests.size());
 
-        var request = postedRequests.get(0);
+        LoggedRequest request = postedRequests.get(0);
         assertEquals(
             "{\"id\":1,\"first_name\":\"Ninette\",\"last_name\":\"Clee\","
                 + "\"gender\":\"Female\",\"stock\":\"CDZI\",\"currency\":\"RUB\","

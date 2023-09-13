@@ -1,12 +1,7 @@
 package com.getindata.connectors.http.internal.table.lookup;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
+import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
+import com.getindata.connectors.http.internal.utils.ThreadUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.table.data.RowData;
@@ -14,8 +9,12 @@ import org.apache.flink.table.functions.AsyncTableFunction;
 import org.apache.flink.table.functions.FunctionContext;
 import org.apache.flink.util.concurrent.ExecutorThreadFactory;
 
-import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
-import com.getindata.connectors.http.internal.utils.ThreadUtils;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -75,8 +74,10 @@ public class AsyncHttpTableLookupFunction extends AsyncTableFunction<RowData> {
 
     public void eval(CompletableFuture<Collection<RowData>> resultFuture, Object... keys) {
 
-        CompletableFuture<Optional<RowData>> future = new CompletableFuture<>();
-        future.completeAsync(() -> decorate.lookupByKeys(keys), pullingThreadPool);
+        CompletableFuture<Optional<RowData>> future = CompletableFuture.supplyAsync(
+                () -> decorate.lookupByKeys(keys),
+                pullingThreadPool
+        );
 
         // We don't want to use ForkJoinPool at all. We are using a different thread pool
         // for publishing here intentionally to avoid thread starvation.

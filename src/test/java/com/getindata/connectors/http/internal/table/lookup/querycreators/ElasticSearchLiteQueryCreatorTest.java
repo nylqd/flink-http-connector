@@ -1,8 +1,7 @@
 package com.getindata.connectors.http.internal.table.lookup.querycreators;
 
-import java.math.BigDecimal;
-import java.util.List;
-
+import com.getindata.connectors.http.internal.table.lookup.LookupRow;
+import com.getindata.connectors.http.internal.table.lookup.RowDataSingleValueLookupSchemaEntry;
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.data.DecimalData;
 import org.apache.flink.table.data.GenericRowData;
@@ -10,11 +9,12 @@ import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.types.DataType;
 import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.getindata.connectors.http.internal.table.lookup.LookupRow;
-import com.getindata.connectors.http.internal.table.lookup.RowDataSingleValueLookupSchemaEntry;
+import java.math.BigDecimal;
+import java.util.Arrays;
+
 import static com.getindata.connectors.http.internal.table.lookup.HttpLookupTableSourceFactory.row;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ElasticSearchLiteQueryCreatorTest {
 
@@ -32,8 +32,8 @@ public class ElasticSearchLiteQueryCreatorTest {
         GenericRowData lookupDataRow = GenericRowData.of(StringData.fromString("val1"));
 
         // WHEN
-        var queryCreator = new ElasticSearchLiteQueryCreator(lookupRow);
-        var createdQuery = queryCreator.createLookupQuery(lookupDataRow);
+        ElasticSearchLiteQueryCreator queryCreator = new ElasticSearchLiteQueryCreator(lookupRow);
+        String createdQuery = queryCreator.createLookupQuery(lookupDataRow);
 
         // THEN
         assertThat(createdQuery).isEqualTo("q=key1:%22val1%22");
@@ -64,8 +64,8 @@ public class ElasticSearchLiteQueryCreatorTest {
                 decimalValue.scale()));
 
         // WHEN
-        var queryCreator = new ElasticSearchLiteQueryCreator(lookupRow);
-        var createdQuery = queryCreator.createLookupQuery(lookupDataRow);
+        ElasticSearchLiteQueryCreator queryCreator = new ElasticSearchLiteQueryCreator(lookupRow);
+        String createdQuery = queryCreator.createLookupQuery(lookupDataRow);
 
         // THEN
         assertThat(createdQuery).isEqualTo("q=key1:%2210%22");
@@ -93,7 +93,7 @@ public class ElasticSearchLiteQueryCreatorTest {
                 ));
 
         lookupRow.setLookupPhysicalRowDataType(
-            row(List.of(
+            row(Arrays.asList(
                 DataTypes.FIELD("key1", DataTypes.STRING()),
                 DataTypes.FIELD("key2", DataTypes.STRING()),
                 DataTypes.FIELD("key3", DataTypes.STRING())
@@ -106,8 +106,8 @@ public class ElasticSearchLiteQueryCreatorTest {
         );
 
         // WHEN
-        var queryCreator = new ElasticSearchLiteQueryCreator(lookupRow);
-        var createdQuery = queryCreator.createLookupQuery(lookupDataRow);
+        ElasticSearchLiteQueryCreator queryCreator = new ElasticSearchLiteQueryCreator(lookupRow);
+        String createdQuery = queryCreator.createLookupQuery(lookupDataRow);
 
         // THEN
         assertThat(createdQuery)

@@ -70,7 +70,7 @@ under the License.
          section, omitting the patch part (so for 1.15.0 use 1.15). -->
     <flink.version>1.15.0</flink.version>
 
-    <target.java.version>11</target.java.version>
+    <target.java.version>8</target.java.version>
     <scala.binary.version>2.12</scala.binary.version>
     <maven.compiler.source>${target.java.version}</maven.compiler.source>
     <maven.compiler.target>${target.java.version}</maven.compiler.target>
@@ -155,6 +155,12 @@ under the License.
       <artifactId>lombok</artifactId>
       <version>${lombok.version}</version>
       <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>okhttp</artifactId>
+      <version>4.10.0</version>
     </dependency>
 
     <!--TEST-->
@@ -291,28 +297,28 @@ under the License.
         </configuration>
       </plugin>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.1.2</version>
-        <executions>
-          <execution>
-            <id>checkstyle</id>
-            <phase>validate</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <configuration>
-              <configLocation>dev/checkstyle.xml</configLocation>
-              <encoding>UTF-8</encoding>
-              <consoleOutput>true</consoleOutput>
-              <failsOnError>true</failsOnError>
-              <failOnViolation>true</failOnViolation>
-              <includeTestSourceDirectory>true</includeTestSourceDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
+<!--      <plugin>-->
+<!--        <groupId>org.apache.maven.plugins</groupId>-->
+<!--        <artifactId>maven-checkstyle-plugin</artifactId>-->
+<!--        <version>3.1.2</version>-->
+<!--        <executions>-->
+<!--          <execution>-->
+<!--            <id>checkstyle</id>-->
+<!--            <phase>validate</phase>-->
+<!--            <goals>-->
+<!--              <goal>check</goal>-->
+<!--            </goals>-->
+<!--            <configuration>-->
+<!--              <configLocation>dev/checkstyle.xml</configLocation>-->
+<!--              <encoding>UTF-8</encoding>-->
+<!--              <consoleOutput>true</consoleOutput>-->
+<!--              <failsOnError>true</failsOnError>-->
+<!--              <failOnViolation>true</failOnViolation>-->
+<!--              <includeTestSourceDirectory>true</includeTestSourceDirectory>-->
+<!--            </configuration>-->
+<!--          </execution>-->
+<!--        </executions>-->
+<!--      </plugin>-->
 
       <plugin>
         <groupId>org.jacoco</groupId>

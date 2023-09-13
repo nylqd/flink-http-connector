@@ -1,5 +1,6 @@
 package com.getindata.connectors.http.internal.table.sink;
 
+import com.getindata.connectors.http.internal.table.sink.HttpDynamicSink.HttpDynamicTableSinkBuilder;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.table.connector.ChangelogMode;
 import org.apache.flink.table.factories.FactoryUtil;
@@ -7,19 +8,18 @@ import org.apache.flink.table.factories.TestFormatFactory;
 import org.apache.flink.table.types.AtomicDataType;
 import org.apache.flink.table.types.logical.BooleanType;
 import org.junit.jupiter.api.Test;
+
+import static com.getindata.connectors.http.internal.table.sink.HttpDynamicSinkConnectorOptions.INSERT_METHOD;
+import static com.getindata.connectors.http.internal.table.sink.HttpDynamicSinkConnectorOptions.URL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-
-import com.getindata.connectors.http.internal.table.sink.HttpDynamicSink.HttpDynamicTableSinkBuilder;
-import static com.getindata.connectors.http.internal.table.sink.HttpDynamicSinkConnectorOptions.INSERT_METHOD;
-import static com.getindata.connectors.http.internal.table.sink.HttpDynamicSinkConnectorOptions.URL;
 
 public class HttpDynamicSinkTest {
 
     @Test
     public void testAsSummaryString() {
-        var mockFormat = new TestFormatFactory.EncodingFormatMock(",", ChangelogMode.insertOnly());
+        TestFormatFactory.EncodingFormatMock mockFormat = new TestFormatFactory.EncodingFormatMock(",", ChangelogMode.insertOnly());
 
         HttpDynamicSink dynamicSink = new HttpDynamicTableSinkBuilder()
             .setTableOptions(new Configuration())
@@ -34,8 +34,8 @@ public class HttpDynamicSinkTest {
 
     @Test
     public void copyEqualityTest() {
-        var mockFormat = new TestFormatFactory.EncodingFormatMock(",", ChangelogMode.insertOnly());
-        var sink = new HttpDynamicSink
+        TestFormatFactory.EncodingFormatMock mockFormat = new TestFormatFactory.EncodingFormatMock(",", ChangelogMode.insertOnly());
+        HttpDynamicSink sink = new HttpDynamicSink
             .HttpDynamicTableSinkBuilder()
             .setTableOptions(
                 new Configuration() {
@@ -57,8 +57,8 @@ public class HttpDynamicSinkTest {
     }
 
     private HttpDynamicSink.HttpDynamicTableSinkBuilder getSinkBuilder() {
-        var mockFormat = new TestFormatFactory.EncodingFormatMock(",", ChangelogMode.insertOnly());
-        var consumedDataType = new AtomicDataType(new BooleanType(false));
+        TestFormatFactory.EncodingFormatMock mockFormat = new TestFormatFactory.EncodingFormatMock(",", ChangelogMode.insertOnly());
+        AtomicDataType consumedDataType = new AtomicDataType(new BooleanType(false));
 
         return new HttpDynamicSink.HttpDynamicTableSinkBuilder()
             .setTableOptions(
@@ -78,9 +78,9 @@ public class HttpDynamicSinkTest {
 
     @Test
     public void nonEqualsTest() {
-        var sink = getSinkBuilder().build();
-        var sinkBatchSize = getSinkBuilder().setMaxBatchSize(10).build();
-        var sinkSinkConfig = getSinkBuilder().setTableOptions(
+        HttpDynamicSink sink = getSinkBuilder().build();
+        HttpDynamicSink sinkBatchSize = getSinkBuilder().setMaxBatchSize(10).build();
+        HttpDynamicSink sinkSinkConfig = getSinkBuilder().setTableOptions(
             new Configuration() {
                 {
                     this.set(URL, "localhost:8124");
@@ -89,11 +89,11 @@ public class HttpDynamicSinkTest {
                 }
             }
         ).build();
-        var sinkDataType =
+        HttpDynamicSink sinkDataType =
             getSinkBuilder().setConsumedDataType(new AtomicDataType(new BooleanType(true))).build();
-        var sinkFormat = getSinkBuilder().setEncodingFormat(
+        HttpDynamicSink sinkFormat = getSinkBuilder().setEncodingFormat(
             new TestFormatFactory.EncodingFormatMock(";", ChangelogMode.all())).build();
-        var sinkHttpPostRequestCallback =
+        HttpDynamicSink sinkHttpPostRequestCallback =
             getSinkBuilder()
                 .setHttpPostRequestCallback(new Slf4jHttpPostRequestCallback()).build();
 

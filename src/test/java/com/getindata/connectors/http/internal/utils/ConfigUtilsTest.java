@@ -1,16 +1,17 @@
 package com.getindata.connectors.http.internal.utils;
 
-import java.util.Map;
-import java.util.Properties;
-
+import com.getindata.connectors.http.internal.config.ConfigException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import static com.getindata.connectors.http.TestHelper.assertPropertyArray;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import com.getindata.connectors.http.internal.config.ConfigException;
-import static com.getindata.connectors.http.TestHelper.assertPropertyArray;
 
 class ConfigUtilsTest {
 
@@ -25,16 +26,16 @@ class ConfigUtilsTest {
         properties.setProperty("another.my.property.extra", "val6");
 
         Map<String, String> mappedProperties =
-            ConfigUtils.propertiesToMap(properties, "my.property", String.class);
+                ConfigUtils.propertiesToMap(properties, "my.property", String.class);
 
         assertThat(mappedProperties).hasSize(3);
         assertThat(mappedProperties)
-            .containsAllEntriesOf(
-                Map.of(
-                    "my.property", "val2",
-                    "my.property.detail", "val4",
-                    "my.property.extra", "val5"
-                ));
+                .containsAllEntriesOf(
+                        new HashMap<String, String>() {{
+                            put("my.property", "val2");
+                            put("my.property.detail", "val4");
+                            put("my.property.extra", "val5");
+                        }});
     }
 
     @Test
@@ -45,7 +46,7 @@ class ConfigUtilsTest {
         properties.setProperty("my.super.property", "val3");
 
         Map<String, String> mappedProperties =
-            ConfigUtils.propertiesToMap(properties, "my.custom", String.class);
+                ConfigUtils.propertiesToMap(properties, "my.custom", String.class);
         assertThat(mappedProperties).isEmpty();
     }
 
@@ -57,20 +58,20 @@ class ConfigUtilsTest {
 
         // Should ignore "invalid" property since does not match the prefix
         Map<String, String> mappedProperties =
-            ConfigUtils.propertiesToMap(properties, "my.custom", String.class);
+                ConfigUtils.propertiesToMap(properties, "my.custom", String.class);
         assertThat(mappedProperties).isEmpty();
 
         // should throw on invalid value, when name matches the prefix.
         assertThatThrownBy(
-            () -> ConfigUtils.propertiesToMap(properties, "a.property", String.class))
-            .isInstanceOf(ConfigException.class);
+                () -> ConfigUtils.propertiesToMap(properties, "a.property", String.class))
+                .isInstanceOf(ConfigException.class);
 
         // should throw on non String key regardless of key prefix.
         Properties nonStringProperties = new Properties();
         nonStringProperties.put(new Object(), 1);
         assertThatThrownBy(
-            () -> ConfigUtils.propertiesToMap(nonStringProperties, "a.property", String.class))
-            .isInstanceOf(ConfigException.class);
+                () -> ConfigUtils.propertiesToMap(nonStringProperties, "a.property", String.class))
+                .isInstanceOf(ConfigException.class);
     }
 
     @ParameterizedTest(name = "Property full name - {0}")
@@ -86,17 +87,17 @@ class ConfigUtilsTest {
     public void shouldThrowOnInvalidProperty(String invalidProperty) {
 
         assertThatThrownBy(
-            () -> ConfigUtils.extractPropertyLastElement(invalidProperty))
-            .isInstanceOf(ConfigException.class);
+                () -> ConfigUtils.extractPropertyLastElement(invalidProperty))
+                .isInstanceOf(ConfigException.class);
     }
 
     @Test
     public void flatMapPropertyMap() {
-        Map<String, String> propertyMap = Map.of(
-            "propertyOne", "val1",
-            "propertyTwo", "val2",
-            "propertyThree", "val3"
-        );
+        Map<String, String> propertyMap = new HashMap<String, String>() {{
+            put("propertyOne", "val1");
+            put("propertyTwo", "val2");
+            put("propertyThree", "val3");
+        }};
 
         String[] propertyArray = HttpHeaderUtils.toHeaderAndValueArray(propertyMap);
 

@@ -1,14 +1,14 @@
 package com.getindata.connectors.http.internal.sink.httpclient;
 
-import java.net.http.HttpClient;
+import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
+import com.getindata.connectors.http.internal.utils.ThreadUtils;
+import okhttp3.OkHttpClient;
+import org.apache.flink.util.concurrent.ExecutorThreadFactory;
+
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import org.apache.flink.util.concurrent.ExecutorThreadFactory;
-
-import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
-import com.getindata.connectors.http.internal.utils.ThreadUtils;
 
 public abstract class AbstractRequestSubmitter implements RequestSubmitter {
 
@@ -23,16 +23,16 @@ public abstract class AbstractRequestSubmitter implements RequestSubmitter {
 
     protected final int httpRequestTimeOutSeconds;
 
-    protected final String[] headersAndValues;
+    protected final Map<String, String> headerMap;
 
-    protected final HttpClient httpClient;
+    protected final OkHttpClient okHttpClient;
 
     public AbstractRequestSubmitter(
             Properties properties,
-            String[] headersAndValues,
-            HttpClient httpClient) {
+            Map<String, String> headerMap,
+            OkHttpClient okHttpClient) {
 
-        this.headersAndValues = headersAndValues;
+        this.headerMap = headerMap;
         this.publishingThreadPool =
             Executors.newFixedThreadPool(
                 HTTP_CLIENT_PUBLISHING_THREAD_POOL_SIZE,
@@ -44,6 +44,6 @@ public abstract class AbstractRequestSubmitter implements RequestSubmitter {
                 DEFAULT_REQUEST_TIMEOUT_SECONDS)
         );
 
-        this.httpClient = httpClient;
+        this.okHttpClient = okHttpClient;
     }
 }

@@ -12,7 +12,7 @@ import com.getindata.connectors.http.internal.SinkHttpClient;
 import com.getindata.connectors.http.internal.SinkHttpClientBuilder;
 import com.getindata.connectors.http.internal.sink.HttpSinkRequestEntry;
 import com.getindata.connectors.http.internal.sink.httpclient.HttpRequest;
-import com.getindata.connectors.http.internal.sink.httpclient.JavaNetSinkHttpClient;
+import com.getindata.connectors.http.internal.sink.httpclient.OkSinkHttpClient;
 import com.getindata.connectors.http.internal.table.sink.Slf4jHttpPostRequestCallback;
 import com.getindata.connectors.http.internal.utils.HttpHeaderUtils;
 
@@ -61,7 +61,7 @@ public class HttpSinkBuilder<InputT> extends
 
     private static final long DEFAULT_MAX_RECORD_SIZE_IN_B = 1024 * 1024;
 
-    private static final SinkHttpClientBuilder DEFAULT_CLIENT_BUILDER = JavaNetSinkHttpClient::new;
+    private static final SinkHttpClientBuilder DEFAULT_CLIENT_BUILDER = OkSinkHttpClient::new;
 
     private static final HttpPostRequestCallback<HttpRequest>
         DEFAULT_POST_REQUEST_CALLBACK = new Slf4jHttpPostRequestCallback();

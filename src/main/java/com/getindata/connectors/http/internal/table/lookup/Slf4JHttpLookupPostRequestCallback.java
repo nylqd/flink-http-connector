@@ -1,16 +1,14 @@
 package com.getindata.connectors.http.internal.table.lookup;
 
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.StringJoiner;
-
-import lombok.extern.slf4j.Slf4j;
-
 import com.getindata.connectors.http.HttpPostRequestCallback;
 import com.getindata.connectors.http.internal.utils.ConfigUtils;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.Request;
+import okhttp3.Response;
+
+import java.io.IOException;
+import java.util.Map;
+import java.util.StringJoiner;
 
 /**
  * A {@link HttpPostRequestCallback} that logs pairs of request and response as <i>INFO</i> level
@@ -25,43 +23,41 @@ public class Slf4JHttpLookupPostRequestCallback
 
     @Override
     public void call(
-            HttpResponse<String> response,
+            Response response,
             HttpLookupSourceRequestEntry requestEntry,
             String endpointUrl,
             Map<String, String> headerMap) {
 
-        HttpRequest httpRequest = requestEntry.getHttpRequest();
+        Request request = requestEntry.getHttpRequest();
         StringJoiner headers = new StringJoiner(";");
 
-        for (Entry<String, List<String>> reqHeaders : httpRequest.headers().map().entrySet()) {
-            StringJoiner values = new StringJoiner(";");
-            for (String value : reqHeaders.getValue()) {
-                values.add(value);
-            }
-            String header = reqHeaders.getKey() + ": [" + values + "]";
-            headers.add(header);
-        }
+        request.headers().forEach(header -> headers.add(header.component1() +":[" +header.component2() + "]"));
+
 
         if (response == null) {
             log.info(
                 "Got response for a request.\n  Request:\n    URL: {}\n    " +
-                    "Method: {}\n    Headers: {}\n    Params/Body: {}\nResponse: null",
-                httpRequest.uri().toString(),
-                httpRequest.method(),
+                    "Method: {}\n    Headers: {}\n    Params/Body: {}\n  Response: null",
+                request.url(),
+                request.method(),
                 headers,
                 requestEntry.getLookupQuery()
             );
         } else {
-            log.info(
-                "Got response for a request.\n  Request:\n    URL: {}\n    " +
-                    "Method: {}\n    Headers: {}\n    Params/Body: {}\nResponse: {}\n    Body: {}",
-                httpRequest.uri().toString(),
-                httpRequest.method(),
-                headers,
-                requestEntry.getLookupQuery(),
-                response,
-                response.body().replaceAll(ConfigUtils.UNIVERSAL_NEW_LINE_REGEXP, "")
-            );
+            try {
+                log.info(
+                    "Got response for a request.\n  Request:\n    URL: {}\n    " +
+                        "Method: {}\n    Headers: {}\n    Params/Body: {}\n  Response: {}\n    Body: {}",
+                    request.url(),
+                    request.method(),
+                    headers,
+                    requestEntry.getLookupQuery(),
+                    response,
+                    response.body().string().replaceAll(ConfigUtils.UNIVERSAL_NEW_LINE_REGEXP, "")
+                );
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
     }

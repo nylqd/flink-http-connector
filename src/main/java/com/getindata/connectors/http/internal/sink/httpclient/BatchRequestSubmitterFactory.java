@@ -1,16 +1,16 @@
 package com.getindata.connectors.http.internal.sink.httpclient;
 
-import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
+import com.getindata.connectors.http.internal.config.ConfigException;
+import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
+import com.getindata.connectors.http.internal.utils.OkHttpClientFactory;
+import com.getindata.connectors.http.internal.utils.ThreadUtils;
 import org.apache.flink.util.StringUtils;
 import org.apache.flink.util.concurrent.ExecutorThreadFactory;
 
-import com.getindata.connectors.http.internal.config.ConfigException;
-import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
-import com.getindata.connectors.http.internal.utils.JavaNetHttpClientFactory;
-import com.getindata.connectors.http.internal.utils.ThreadUtils;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class BatchRequestSubmitterFactory implements RequestSubmitterFactory {
 
@@ -29,7 +29,7 @@ public class BatchRequestSubmitterFactory implements RequestSubmitterFactory {
     }
 
     @Override
-    public BatchRequestSubmitter createSubmitter(Properties properties, String[] headersAndValues) {
+    public BatchRequestSubmitter createSubmitter(Properties properties, Map<String, String> headerMap) {
         String batchRequestSize =
             properties.getProperty(HttpConnectorConfigConstants.SINK_HTTP_BATCH_REQUEST_SIZE);
         if (StringUtils.isNullOrWhitespaceOnly(batchRequestSize)) {
@@ -69,8 +69,8 @@ public class BatchRequestSubmitterFactory implements RequestSubmitterFactory {
 
         return new BatchRequestSubmitter(
                 properties,
-                headersAndValues,
-                JavaNetHttpClientFactory.createClient(properties, httpClientExecutor)
+                headerMap,
+                OkHttpClientFactory.createClient(properties, httpClientExecutor)
             );
     }
 }

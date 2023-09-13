@@ -1,11 +1,8 @@
 package com.getindata.connectors.http.internal.sink.httpclient.status;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
+import com.getindata.connectors.http.internal.status.ComposeHttpStatusCodeChecker;
+import com.getindata.connectors.http.internal.status.ComposeHttpStatusCodeChecker.ComposeHttpStatusCodeCheckerConfig;
 import org.apache.flink.util.StringUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -13,13 +10,16 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
-import com.getindata.connectors.http.internal.status.ComposeHttpStatusCodeChecker;
-import com.getindata.connectors.http.internal.status.ComposeHttpStatusCodeChecker.ComposeHttpStatusCodeCheckerConfig;
 
 class ComposeHttpStatusCodeCheckerTest {
 
@@ -116,7 +116,7 @@ class ComposeHttpStatusCodeCheckerTest {
         properties.setProperty(
             HttpConnectorConfigConstants.HTTP_ERROR_SINK_CODES_LIST, "1xx, 2XX ");
 
-        List<Integer> codes = List.of(100, 110, 200, 220);
+        List<Integer> codes = Arrays.asList(100, 110, 200, 220);
 
         ComposeHttpStatusCodeCheckerConfig checkerConfig = prepareCheckerConfig(properties);
 

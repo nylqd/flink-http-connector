@@ -1,14 +1,11 @@
 package com.getindata.connectors.http.internal.sink;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.getindata.connectors.http.HttpSink;
+import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
+import com.getindata.connectors.http.internal.config.SinkRequestSubmitMode;
+import com.getindata.connectors.http.internal.sink.httpclient.OkSinkHttpClient;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
@@ -19,19 +16,23 @@ import org.apache.flink.metrics.Metric;
 import org.apache.flink.metrics.MetricConfig;
 import org.apache.flink.metrics.MetricGroup;
 import org.apache.flink.metrics.reporter.MetricReporter;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import com.getindata.connectors.http.HttpSink;
-import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
-import com.getindata.connectors.http.internal.config.SinkRequestSubmitMode;
-import com.getindata.connectors.http.internal.sink.httpclient.JavaNetSinkHttpClient;
 
 public class HttpSinkConnectionTest {
 
@@ -87,9 +88,9 @@ public class HttpSinkConnectionTest {
         List<Map<Object, Object>> responses =
             testConnection(SinkRequestSubmitMode.SINGLE, responseMapper);
 
-        var idsSet = new HashSet<>(messageIds);
-        for (var request : responses) {
-            var el = (Integer) request.get("http-sink-id");
+        HashSet<Integer> idsSet = new HashSet<>(messageIds);
+        for (Map<Object, Object> request : responses) {
+            Integer el = (Integer) request.get("http-sink-id");
             assertTrue(idsSet.contains(el));
             idsSet.remove(el);
         }
@@ -113,10 +114,10 @@ public class HttpSinkConnectionTest {
         List<List<Map<Object, Object>>> responses =
             testConnection(SinkRequestSubmitMode.BATCH, responseMapper);
 
-        var idsSet = new HashSet<>(messageIds);
-        for (var requests : responses) {
-            for (var request : requests) {
-                var el = (Integer) request.get("http-sink-id");
+        HashSet<Integer> idsSet = new HashSet<>(messageIds);
+        for (List<Map<Object, Object>> requests : responses) {
+            for (Map<Object, Object> request : requests) {
+                Integer el = (Integer) request.get("http-sink-id");
                 assertTrue(idsSet.contains(el));
                 idsSet.remove(el);
             }
@@ -140,13 +141,13 @@ public class HttpSinkConnectionTest {
                     .withStatus(200)
                     .withBody("{}")));
 
-        var source = env.fromCollection(messages);
-        var httpSink = HttpSink.<String>builder()
+        DataStreamSource<String> source = env.fromCollection(messages);
+        HttpSink<String> httpSink = HttpSink.<String>builder()
             .setEndpointUrl("http://localhost:" + SERVER_PORT + endpoint)
             .setElementConverter(
                 (s, _context) ->
                     new HttpSinkRequestEntry("POST", s.getBytes(StandardCharsets.UTF_8)))
-            .setSinkHttpClientBuilder(JavaNetSinkHttpClient::new)
+            .setSinkHttpClientBuilder(OkSinkHttpClient::new)
             .setProperty(
                 HttpConnectorConfigConstants.SINK_HEADER_PREFIX + "Content-Type",
                 contentTypeHeader)
@@ -158,7 +159,7 @@ public class HttpSinkConnectionTest {
         source.sinkTo(httpSink);
         env.execute("Http Sink test connection");
 
-        var responses = wireMockServer.getAllServeEvents();
+        List<ServeEvent> responses = wireMockServer.getAllServeEvents();
         assertTrue(responses.stream()
             .allMatch(response -> Objects.equals(response.getRequest().getUrl(), endpoint)));
         assertTrue(
@@ -188,13 +189,13 @@ public class HttpSinkConnectionTest {
             .willReturn(aResponse().withStatus(200))
             .willSetStateTo("Cause Success"));
 
-        var source = env.fromCollection(List.of(messages.get(0)));
-        var httpSink = HttpSink.<String>builder()
+        DataStreamSource<String> source = env.fromCollection(Arrays.asList(messages.get(0)));
+        HttpSink<String> httpSink = HttpSink.<String>builder()
             .setEndpointUrl("http://localhost:" + SERVER_PORT + "/myendpoint")
             .setElementConverter(
                 (s, _context) ->
                     new HttpSinkRequestEntry("POST", s.getBytes(StandardCharsets.UTF_8)))
-            .setSinkHttpClientBuilder(JavaNetSinkHttpClient::new)
+            .setSinkHttpClientBuilder(OkSinkHttpClient::new)
             .build();
         source.sinkTo(httpSink);
         env.execute("Http Sink test failed connection");
@@ -224,13 +225,13 @@ public class HttpSinkConnectionTest {
             .willReturn(aResponse().withStatus(200))
             .willSetStateTo("Cause Success"));
 
-        var source = env.fromCollection(List.of(messages.get(0)));
-        var httpSink = HttpSink.<String>builder()
+        DataStreamSource<String> source = env.fromCollection(Arrays.asList(messages.get(0)));
+        HttpSink<String> httpSink = HttpSink.<String>builder()
             .setEndpointUrl("http://localhost:" + SERVER_PORT + "/myendpoint")
             .setElementConverter(
                 (s, _context) ->
                     new HttpSinkRequestEntry("POST", s.getBytes(StandardCharsets.UTF_8)))
-            .setSinkHttpClientBuilder(JavaNetSinkHttpClient::new)
+            .setSinkHttpClientBuilder(OkSinkHttpClient::new)
             .build();
         source.sinkTo(httpSink);
         env.execute("Http Sink test failed connection");
@@ -249,13 +250,13 @@ public class HttpSinkConnectionTest {
             .withHeader("Content-Type", equalTo("application/json"))
             .willReturn(aResponse().withBody("404 body").withStatus(404)));
 
-        var source = env.fromCollection(List.of(messages.get(0)));
-        var httpSink = HttpSink.<String>builder()
+        DataStreamSource<String> source = env.fromCollection(Arrays.asList(messages.get(0)));
+        HttpSink<String> httpSink = HttpSink.<String>builder()
             .setEndpointUrl("http://localhost:" + SERVER_PORT + "/myendpoint")
             .setElementConverter(
                 (s, _context) ->
                     new HttpSinkRequestEntry("POST", s.getBytes(StandardCharsets.UTF_8)))
-            .setSinkHttpClientBuilder(JavaNetSinkHttpClient::new)
+            .setSinkHttpClientBuilder(OkSinkHttpClient::new)
             .setProperty("gid.connector.http.sink.error.code.exclude", "404, 405")
             .setProperty("gid.connector.http.sink.error.code", "4XX")
             .build();

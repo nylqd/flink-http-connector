@@ -1,11 +1,5 @@
 package com.getindata.connectors.http.internal.table.lookup;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.flink.configuration.ConfigOptions;
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.catalog.Column;
@@ -18,15 +12,20 @@ import org.apache.flink.table.runtime.connector.source.LookupRuntimeProviderCont
 import org.apache.flink.table.types.DataType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.apache.flink.table.factories.utils.FactoryMocks.createTableSource;
-import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.getindata.connectors.http.internal.table.lookup.HttpLookupTableSourceFactory.row;
+import static org.apache.flink.table.factories.utils.FactoryMocks.createTableSource;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class HttpLookupTableSourceTest {
 
     public static final DataType PHYSICAL_ROW_DATA_TYPE =
-        row(List.of(DataTypes.FIELD("id", DataTypes.STRING().notNull())));
+        row(Arrays.asList(DataTypes.FIELD("id", DataTypes.STRING().notNull())));
 
     private static final ResolvedSchema SCHEMA =
         new ResolvedSchema(
@@ -43,7 +42,7 @@ class HttpLookupTableSourceTest {
                 ).notNull())
             ),
             Collections.emptyList(),
-            UniqueConstraint.primaryKey("id", List.of("id"))
+            UniqueConstraint.primaryKey("id", Arrays.asList("id"))
         );
 
     // lookupKey index {{0}} means first column.
@@ -132,9 +131,10 @@ class HttpLookupTableSourceTest {
     }
 
     private Map<String, String> getOptions() {
-        return Map.of(
-            "connector", "rest-lookup",
-            "url", "http://localhost:8080/service",
-            "format", "json");
+        return new HashMap<String, String>(){{
+            put("connector", "rest-lookup");
+            put("url", "http://localhost:8080/service");
+            put("format", "json");
+        }};
     }
 }

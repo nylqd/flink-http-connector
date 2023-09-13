@@ -1,12 +1,10 @@
 package com.getindata.connectors.http.internal.utils.uri;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.List;
-
 import org.junit.jupiter.api.Test;
+
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class URLEncodedUtilsTest {
@@ -15,7 +13,7 @@ class URLEncodedUtilsTest {
     public void testFormatSegments() {
         String segments =
             URLEncodedUtils.formatSegments(
-                List.of("segmentOne", "segmentTwo", "segmentThree"),
+                Arrays.asList("segmentOne", "segmentTwo", "segmentThree"),
                 StandardCharsets.UTF_8
             );
 
@@ -97,7 +95,7 @@ class URLEncodedUtilsTest {
             StandardCharsets.UTF_8
         );
 
-        assertThat(segments).isEqualTo(List.of("hello", "", "%world"));
+        assertThat(segments).isEqualTo(Arrays.asList("hello", "", "%world"));
     }
 
     @Test
@@ -107,6 +105,6 @@ class URLEncodedUtilsTest {
             StandardCharsets.UTF_8
         );
 
-        assertThat(segments).isEqualTo(List.of("hello", "", "world?q=what+%+is+in+HTTP"));
+        assertThat(segments).isEqualTo(Arrays.asList("hello", "", "world?q=what+%+is+in+HTTP"));
     }
 }

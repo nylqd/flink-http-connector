@@ -1,8 +1,13 @@
 package com.getindata.connectors.http.internal.table.sink;
 
-import java.util.Properties;
-import javax.annotation.Nullable;
-
+import com.getindata.connectors.http.HttpPostRequestCallback;
+import com.getindata.connectors.http.HttpSink;
+import com.getindata.connectors.http.HttpSinkBuilder;
+import com.getindata.connectors.http.internal.sink.HttpSinkRequestEntry;
+import com.getindata.connectors.http.internal.sink.httpclient.HttpRequest;
+import com.getindata.connectors.http.internal.sink.httpclient.OkSinkHttpClient;
+import com.getindata.connectors.http.internal.table.SerializationSchemaElementConverter;
+import com.getindata.connectors.http.internal.utils.HttpHeaderUtils;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.serialization.SerializationSchema;
@@ -17,14 +22,9 @@ import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.util.Preconditions;
 
-import com.getindata.connectors.http.HttpPostRequestCallback;
-import com.getindata.connectors.http.HttpSink;
-import com.getindata.connectors.http.HttpSinkBuilder;
-import com.getindata.connectors.http.internal.sink.HttpSinkRequestEntry;
-import com.getindata.connectors.http.internal.sink.httpclient.HttpRequest;
-import com.getindata.connectors.http.internal.sink.httpclient.JavaNetSinkHttpClient;
-import com.getindata.connectors.http.internal.table.SerializationSchemaElementConverter;
-import com.getindata.connectors.http.internal.utils.HttpHeaderUtils;
+import javax.annotation.Nullable;
+import java.util.Properties;
+
 import static com.getindata.connectors.http.internal.table.sink.HttpDynamicSinkConnectorOptions.INSERT_METHOD;
 import static com.getindata.connectors.http.internal.table.sink.HttpDynamicSinkConnectorOptions.URL;
 
@@ -121,12 +121,12 @@ public class HttpDynamicSink extends AsyncDynamicTableSink<HttpSinkRequestEntry>
         SerializationSchema<RowData> serializationSchema =
             encodingFormat.createRuntimeEncoder(context, consumedDataType);
 
-        var insertMethod = tableOptions.get(INSERT_METHOD);
+        String insertMethod = tableOptions.get(INSERT_METHOD);
 
         HttpSinkBuilder<RowData> builder = HttpSink
             .<RowData>builder()
             .setEndpointUrl(tableOptions.get(URL))
-            .setSinkHttpClientBuilder(JavaNetSinkHttpClient::new)
+            .setSinkHttpClientBuilder(OkSinkHttpClient::new)
             .setHttpPostRequestCallback(httpPostRequestCallback)
             // In future header preprocessor could be set via custom factory
             .setHttpHeaderPreprocessor(HttpHeaderUtils.createDefaultHeaderPreprocessor())

@@ -1,8 +1,10 @@
 package com.getindata.connectors.http.internal.table.lookup;
 
-import java.net.http.HttpClient;
-import java.util.Properties;
-
+import com.getindata.connectors.http.internal.HeaderPreprocessor;
+import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
+import com.getindata.connectors.http.internal.table.lookup.querycreators.GenericGetQueryCreator;
+import com.getindata.connectors.http.internal.utils.HttpHeaderUtils;
+import okhttp3.OkHttpClient;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.table.data.RowData;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,19 +12,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Map;
+import java.util.Properties;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.getindata.connectors.http.internal.HeaderPreprocessor;
-import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
-import com.getindata.connectors.http.internal.table.lookup.querycreators.GenericGetQueryCreator;
-import com.getindata.connectors.http.internal.utils.HttpHeaderUtils;
-import static com.getindata.connectors.http.TestHelper.assertPropertyArray;
-
 @ExtendWith(MockitoExtension.class)
-public class JavaNetHttpPollingClientTest {
+public class OkHttpPollingClientTest {
 
     @Mock
-    private HttpClient httpClient;
+    private OkHttpClient httpClient;
 
     @Mock
     private DeserializationSchema<RowData> decoder;
@@ -43,7 +43,7 @@ public class JavaNetHttpPollingClientTest {
     @Test
     public void shouldBuildClientWithoutHeaders() {
 
-        JavaNetHttpPollingClient client = new JavaNetHttpPollingClient(
+        OkHttpPollingClient client = new OkHttpPollingClient(
             httpClient,
             decoder,
             options,
@@ -55,7 +55,7 @@ public class JavaNetHttpPollingClientTest {
         );
 
         assertThat(
-            ((GetRequestFactory) client.getRequestFactory()).getHeadersAndValues())
+            ((GetRequestFactory) client.getRequestFactory()).getHeaderMap())
             .isEmpty();
     }
 
@@ -84,7 +84,7 @@ public class JavaNetHttpPollingClientTest {
             .properties(properties)
             .build();
 
-        JavaNetHttpPollingClient client = new JavaNetHttpPollingClient(
+        OkHttpPollingClient client = new OkHttpPollingClient(
             httpClient,
             decoder,
             lookupConfig,
@@ -95,17 +95,14 @@ public class JavaNetHttpPollingClientTest {
             )
         );
 
-        String[] headersAndValues =
-            ((GetRequestFactory) client.getRequestFactory()).getHeadersAndValues();
-        assertThat(headersAndValues).hasSize(6);
+
+        Map<String, String> headerMap = ((GetRequestFactory) client.getRequestFactory()).getHeaderMap();
+        assertThat(headerMap).hasSize(3);
 
         // THEN
         // assert that we have property followed by its value.
-        assertPropertyArray(headersAndValues, "Origin", "https://developer.mozilla.org");
-        assertPropertyArray(
-            headersAndValues,
-            "Cache-Control", "no-cache, no-store, max-age=0, must-revalidate"
-        );
-        assertPropertyArray(headersAndValues, "Access-Control-Allow-Origin", "*");
+        assertThat(headerMap.get("Origin")).isEqualTo("https://developer.mozilla.org");
+        assertThat(headerMap.get("Cache-Control")).isEqualTo("no-cache, no-store, max-age=0, must-revalidate");
+        assertThat(headerMap.get("Access-Control-Allow-Origin")).isEqualTo("*");
     }
 }

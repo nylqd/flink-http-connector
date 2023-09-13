@@ -1,9 +1,10 @@
 package com.getindata.connectors.http.internal.table.lookup;
 
-import java.io.File;
-import java.util.List;
-import java.util.Properties;
-
+import com.getindata.connectors.http.internal.HttpsConnectionTestBase;
+import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
+import com.getindata.connectors.http.internal.table.lookup.querycreators.GenericGetQueryCreator;
+import com.getindata.connectors.http.internal.utils.HttpHeaderUtils;
+import com.getindata.connectors.http.internal.utils.SerializationSchemaUtils;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.configuration.Configuration;
@@ -25,23 +26,20 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+
+import java.io.File;
+import java.util.Arrays;
+import java.util.Properties;
+
+import static com.getindata.connectors.http.TestHelper.readTestFile;
+import static com.getindata.connectors.http.internal.table.lookup.HttpLookupTableSourceFactory.row;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.getindata.connectors.http.internal.HttpsConnectionTestBase;
-import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
-import com.getindata.connectors.http.internal.table.lookup.querycreators.GenericGetQueryCreator;
-import com.getindata.connectors.http.internal.utils.HttpHeaderUtils;
-import com.getindata.connectors.http.internal.utils.SerializationSchemaUtils;
-import static com.getindata.connectors.http.TestHelper.readTestFile;
-import static com.getindata.connectors.http.internal.table.lookup.HttpLookupTableSourceFactory.row;
-
 @ExtendWith(MockitoExtension.class)
-public class JavaNetHttpPollingClientHttpsConnectionTest extends HttpsConnectionTestBase {
+public class OkHttpPollingClientHttpsConnectionTest extends HttpsConnectionTestBase {
 
     private static final String SAMPLES_FOLDER = "/http/";
 
@@ -52,7 +50,7 @@ public class JavaNetHttpPollingClientHttpsConnectionTest extends HttpsConnection
 
     private DynamicTableSource.Context dynamicTableSourceContext;
 
-    private JavaNetHttpPollingClientFactory pollingClientFactory;
+    private OkHttpPollingClientFactory pollingClientFactory;
 
     private RowData lookupRowData;
 
@@ -69,7 +67,7 @@ public class JavaNetHttpPollingClientHttpsConnectionTest extends HttpsConnection
             StringData.fromString("2")
         );
 
-        this.lookupPhysicalDataType = row(List.of(
+        this.lookupPhysicalDataType = row(Arrays.asList(
                 DataTypes.FIELD("id", DataTypes.STRING()),
                 DataTypes.FIELD("uuid", DataTypes.STRING())
             )
@@ -248,13 +246,13 @@ public class JavaNetHttpPollingClientHttpsConnectionTest extends HttpsConnection
     }
 
     private void testPollingClientConnection() {
-        JavaNetHttpPollingClient pollingClient = setUpPollingClient(properties);
-        RowData result = pollingClient.pull(lookupRowData).orElseThrow();
+        OkHttpPollingClient pollingClient = setUpPollingClient(properties);
+        RowData result = pollingClient.pull(lookupRowData).orElseThrow(() -> new RuntimeException("testPollingClientConnection"));
 
         assertResult(result);
     }
 
-    private JavaNetHttpPollingClient setUpPollingClient(Properties properties) {
+    private OkHttpPollingClient setUpPollingClient(Properties properties) {
 
         HttpLookupConfig lookupConfig = HttpLookupConfig.builder()
             .url("https://localhost:" + HTTPS_SERVER_PORT + ENDPOINT)
@@ -281,7 +279,7 @@ public class JavaNetHttpPollingClientHttpsConnectionTest extends HttpsConnection
         try {
             schemaDecoder.open(
                 SerializationSchemaUtils.createDeserializationInitContext(
-                    JavaNetHttpPollingClientConnectionTest.class));
+                    OkHttpPollingClientConnectionTest.class));
         } catch (Exception e) {
             throw new RuntimeException("Unable to open schema decoder: " + e.getMessage(), e);
         }
@@ -321,7 +319,7 @@ public class JavaNetHttpPollingClientHttpsConnectionTest extends HttpsConnection
                 .url(baseUrl + ENDPOINT)
                 .build()
         );
-        this.pollingClientFactory = new JavaNetHttpPollingClientFactory(requestFactory);
+        this.pollingClientFactory = new OkHttpPollingClientFactory(requestFactory);
     }
 
     private void assertResult(RowData result) {

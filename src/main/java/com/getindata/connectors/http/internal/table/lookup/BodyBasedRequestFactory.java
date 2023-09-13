@@ -1,18 +1,17 @@
 package com.getindata.connectors.http.internal.table.lookup;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.http.HttpRequest;
-import java.net.http.HttpRequest.BodyPublishers;
-import java.net.http.HttpRequest.Builder;
-import java.time.Duration;
-
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-
 import com.getindata.connectors.http.LookupQueryCreator;
 import com.getindata.connectors.http.internal.HeaderPreprocessor;
 import com.getindata.connectors.http.internal.utils.uri.URIBuilder;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import org.slf4j.Logger;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import static com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants.HEADER_REQUEST_TIMEOUT_SECONDS;
 
 /**
  * Implementation of {@link HttpRequestFactory} for REST calls that sends their parameters using
@@ -34,18 +33,19 @@ public class BodyBasedRequestFactory extends RequestFactoryBase {
     }
 
     /**
-     * Method for preparing {@link HttpRequest.Builder} for REST request that sends their parameters
+     * Method for preparing {@link Request.Builder} for REST request that sends their parameters
      * in request body, for example PUT or POST methods
      *
      * @param lookupQuery lookup query used for request body.
-     * @return {@link HttpRequest.Builder} for given lookupQuery.
+     * @return {@link Request.Builder} for given lookupQuery.
      */
     @Override
-    protected Builder setUpRequestMethod(String lookupQuery) {
-        return HttpRequest.newBuilder()
-            .uri(constructGetUri())
-            .method(methodName, BodyPublishers.ofString(lookupQuery))
-            .timeout(Duration.ofSeconds(this.httpRequestTimeOutSeconds));
+    protected Request.Builder setUpRequestMethod(String lookupQuery) {
+
+        return new Request.Builder()
+                .url(constructGetUri().toString())
+                .header(HEADER_REQUEST_TIMEOUT_SECONDS, String.valueOf(this.httpRequestTimeOutSeconds))
+                .method(methodName, RequestBody.create(lookupQuery.getBytes()));
     }
 
     @Override

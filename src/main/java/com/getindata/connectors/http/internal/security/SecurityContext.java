@@ -1,12 +1,19 @@
 package com.getindata.connectors.http.internal.security;
 
+import com.getindata.connectors.http.internal.utils.ConfigUtils;
+import lombok.extern.slf4j.Slf4j;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.Key;
 import java.security.KeyFactory;
@@ -17,14 +24,6 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.UUID;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-
-import lombok.extern.slf4j.Slf4j;
-
-import com.getindata.connectors.http.internal.utils.ConfigUtils;
 
 /**
  * This class represents a security context for given Http connector instance. The Security context
@@ -177,8 +176,8 @@ public class SecurityContext {
     public void addMTlsCerts(String publicKeyPath, String privateKeyPath) {
 
         try {
-            byte[] publicData = Files.readAllBytes(Path.of(publicKeyPath));
-            byte[] privateData = Files.readAllBytes(Path.of(privateKeyPath));
+            byte[] publicData = Files.readAllBytes(Paths.get(publicKeyPath));
+            byte[] privateData = Files.readAllBytes(Paths.get(privateKeyPath));
             byte[] decodedPrivateData = decodePrivateData(privateKeyPath, privateData);
 
             CertificateFactory certificateFactory =

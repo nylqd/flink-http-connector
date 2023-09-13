@@ -1,10 +1,10 @@
 package com.getindata.connectors.http.internal.table.lookup;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.stream.Stream;
-
+import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
+import com.getindata.connectors.http.internal.table.lookup.querycreators.GenericGetQueryCreator;
+import com.getindata.connectors.http.internal.table.lookup.querycreators.GenericJsonQueryCreator;
+import com.getindata.connectors.http.internal.utils.HttpHeaderUtils;
+import com.getindata.connectors.http.internal.utils.SerializationSchemaUtils;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
@@ -21,11 +21,7 @@ import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.factories.DynamicTableFactory.Context;
 import org.apache.flink.table.runtime.connector.source.LookupRuntimeProviderContext;
 import org.apache.flink.table.types.DataType;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -33,28 +29,20 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.put;
-import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.stream.Stream;
+
+import static com.getindata.connectors.http.TestHelper.readTestFile;
+import static com.getindata.connectors.http.internal.table.lookup.HttpLookupTableSourceFactory.row;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
-import com.getindata.connectors.http.internal.table.lookup.querycreators.GenericGetQueryCreator;
-import com.getindata.connectors.http.internal.table.lookup.querycreators.GenericJsonQueryCreator;
-import com.getindata.connectors.http.internal.utils.HttpHeaderUtils;
-import com.getindata.connectors.http.internal.utils.SerializationSchemaUtils;
-import static com.getindata.connectors.http.TestHelper.readTestFile;
-import static com.getindata.connectors.http.internal.table.lookup.HttpLookupTableSourceFactory.row;
-
 @ExtendWith(MockitoExtension.class)
-class JavaNetHttpPollingClientConnectionTest {
+class OkHttpPollingClientConnectionTest {
 
     private static final String SAMPLES_FOLDER = "/http/";
 
@@ -98,7 +86,7 @@ class JavaNetHttpPollingClientConnectionTest {
             StringData.fromString("2")
         );
 
-        this.lookupPhysicalDataType = row(List.of(
+        this.lookupPhysicalDataType = row(Arrays.asList(
                 DataTypes.FIELD("id", DataTypes.STRING()),
                 DataTypes.FIELD("uuid", DataTypes.STRING())
             )
@@ -123,10 +111,10 @@ class JavaNetHttpPollingClientConnectionTest {
 
         // GIVEN
         this.stubMapping = setUpServerStub(200);
-        JavaNetHttpPollingClient pollingClient = setUpPollingClient(getBaseUrl());
+        OkHttpPollingClient pollingClient = setUpPollingClient(getBaseUrl());
 
         // WHEN
-        RowData result = pollingClient.pull(lookupRowData).orElseThrow();
+        RowData result = pollingClient.pull(lookupRowData).orElseThrow(() -> new RuntimeException("testPollingClientConnection"));
 
         // THEN
         wireMockServer.verify(RequestPatternBuilder.forCustomMatcher(stubMapping.getRequest()));
@@ -148,7 +136,7 @@ class JavaNetHttpPollingClientConnectionTest {
 
         // GIVEN
         this.stubMapping = setUpServerBodyStub(methodName);
-        JavaNetHttpPollingClient pollingClient =
+        OkHttpPollingClient pollingClient =
             setUpPollingClient(
                 getBaseUrl(),
                 properties,
@@ -156,7 +144,7 @@ class JavaNetHttpPollingClientConnectionTest {
             );
 
         // WHEN
-        RowData result = pollingClient.pull(lookupRowData).orElseThrow();
+        RowData result = pollingClient.pull(lookupRowData).orElseThrow(() -> new RuntimeException("testPollingClientConnection"));
 
         // THEN
         wireMockServer.verify(RequestPatternBuilder.forCustomMatcher(stubMapping.getRequest()));
@@ -195,7 +183,7 @@ class JavaNetHttpPollingClientConnectionTest {
 
         // GIVEN
         this.stubMapping = setUpServerStub(201);
-        JavaNetHttpPollingClient pollingClient = setUpPollingClient(
+        OkHttpPollingClient pollingClient = setUpPollingClient(
             getBaseUrl(),
             properties,
             setUpGetRequestFactory(properties)
@@ -205,7 +193,7 @@ class JavaNetHttpPollingClientConnectionTest {
         Optional<RowData> poll = pollingClient.pull(lookupRowData);
 
         // THEN
-        assertThat(poll.isEmpty()).isEqualTo(isExpectedResponseEmpty);
+        assertThat(!poll.isPresent()).isEqualTo(isExpectedResponseEmpty);
     }
 
     @Test
@@ -213,7 +201,7 @@ class JavaNetHttpPollingClientConnectionTest {
 
         // GIVEN
         this.stubMapping = setUpServerStub(500);
-        JavaNetHttpPollingClient pollingClient = setUpPollingClient(getBaseUrl());
+        OkHttpPollingClient pollingClient = setUpPollingClient(getBaseUrl());
 
         // WHEN
         Optional<RowData> poll = pollingClient.pull(lookupRowData);
@@ -221,7 +209,7 @@ class JavaNetHttpPollingClientConnectionTest {
         // THEN
         wireMockServer.verify(RequestPatternBuilder.forCustomMatcher(stubMapping.getRequest()));
 
-        assertThat(poll.isEmpty()).isTrue();
+        assertThat(!poll.isPresent()).isTrue();
     }
 
     @Test
@@ -229,13 +217,13 @@ class JavaNetHttpPollingClientConnectionTest {
 
         // GIVEN
         this.stubMapping = setUpServerStub(200);
-        JavaNetHttpPollingClient pollingClient = setUpPollingClient(getBaseUrl());
+        OkHttpPollingClient pollingClient = setUpPollingClient(getBaseUrl());
 
         // WHEN
         Optional<RowData> poll = pollingClient.pull(null);
 
         // THEN
-        assertThat(poll.isEmpty()).isTrue();
+        assertThat(!poll.isPresent()).isTrue();
     }
 
     @ParameterizedTest
@@ -259,14 +247,14 @@ class JavaNetHttpPollingClientConnectionTest {
             authorizationHeaderValue
         );
 
-        JavaNetHttpPollingClient pollingClient = setUpPollingClient(
+        OkHttpPollingClient pollingClient = setUpPollingClient(
             getBaseUrl(),
             properties,
             setUpGetRequestFactory(properties)
         );
 
         // WHEN
-        RowData result = pollingClient.pull(lookupRowData).orElseThrow();
+        RowData result = pollingClient.pull(lookupRowData).orElseThrow(() -> new RuntimeException("testPollingClientConnection"));
 
         // THEN
         wireMockServer.verify(RequestPatternBuilder.forCustomMatcher(stubMapping.getRequest()));
@@ -286,7 +274,7 @@ class JavaNetHttpPollingClientConnectionTest {
         return wireMockServer.baseUrl() + ENDPOINT;
     }
 
-    public JavaNetHttpPollingClient setUpPollingClient(String url) {
+    public OkHttpPollingClient setUpPollingClient(String url) {
 
         Properties properties = new Properties();
         properties.setProperty(
@@ -342,7 +330,7 @@ class JavaNetHttpPollingClientConnectionTest {
         );
     }
 
-    private JavaNetHttpPollingClient setUpPollingClient(
+    private OkHttpPollingClient setUpPollingClient(
             String url,
             Properties properties,
             HttpRequestFactory requestFactory) {
@@ -372,13 +360,13 @@ class JavaNetHttpPollingClientConnectionTest {
         try {
             schemaDecoder.open(
                 SerializationSchemaUtils.createDeserializationInitContext(
-                    JavaNetHttpPollingClientConnectionTest.class));
+                    OkHttpPollingClientConnectionTest.class));
         } catch (Exception e) {
             throw new RuntimeException("Unable to open schema decoder: " + e.getMessage(), e);
         }
 
-        JavaNetHttpPollingClientFactory pollingClientFactory =
-            new JavaNetHttpPollingClientFactory(requestFactory);
+        OkHttpPollingClientFactory pollingClientFactory =
+            new OkHttpPollingClientFactory(requestFactory);
 
         return pollingClientFactory.createPollClient(lookupConfig, schemaDecoder);
     }

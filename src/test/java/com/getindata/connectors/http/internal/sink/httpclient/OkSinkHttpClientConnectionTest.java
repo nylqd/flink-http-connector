@@ -1,9 +1,9 @@
 package com.getindata.connectors.http.internal.sink.httpclient;
 
-import java.io.File;
-import java.util.Collections;
-import java.util.Properties;
-
+import com.getindata.connectors.http.internal.HttpsConnectionTestBase;
+import com.getindata.connectors.http.internal.SinkHttpClientResponse;
+import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
+import com.getindata.connectors.http.internal.sink.HttpSinkRequestEntry;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,20 +11,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.any;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+
+import java.io.File;
+import java.util.Collections;
+import java.util.Properties;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.getindata.connectors.http.internal.HttpsConnectionTestBase;
-import com.getindata.connectors.http.internal.SinkHttpClientResponse;
-import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
-import com.getindata.connectors.http.internal.sink.HttpSinkRequestEntry;
-
-class JavaNetSinkHttpClientConnectionTest extends HttpsConnectionTestBase {
+class OkSinkHttpClientConnectionTest extends HttpsConnectionTestBase {
 
     private RequestSubmitterFactory perRequestSubmitterFactory;
 
@@ -270,7 +268,7 @@ class JavaNetSinkHttpClientConnectionTest extends HttpsConnectionTestBase {
         assertAll(() -> {
             assertThrows(
                 RuntimeException.class,
-                () -> new JavaNetSinkHttpClient(
+                () -> new OkSinkHttpClient(
                     properties,
                     postRequestCallback,
                     headerPreprocessor,
@@ -279,7 +277,7 @@ class JavaNetSinkHttpClientConnectionTest extends HttpsConnectionTestBase {
             );
             assertThrows(
                 RuntimeException.class,
-                () -> new JavaNetSinkHttpClient(
+                () -> new OkSinkHttpClient(
                     properties,
                     postRequestCallback,
                     headerPreprocessor,
@@ -327,8 +325,8 @@ class JavaNetSinkHttpClientConnectionTest extends HttpsConnectionTestBase {
             RequestSubmitterFactory requestSubmitterFactory) {
 
         try {
-            JavaNetSinkHttpClient client =
-                new JavaNetSinkHttpClient(
+            OkSinkHttpClient client =
+                new OkSinkHttpClient(
                     properties,
                     postRequestCallback,
                     headerPreprocessor,

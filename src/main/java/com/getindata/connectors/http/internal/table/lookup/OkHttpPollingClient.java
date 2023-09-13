@@ -1,33 +1,32 @@
 package com.getindata.connectors.http.internal.table.lookup;
 
-import java.io.IOException;
-import java.net.http.HttpClient;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
-import java.util.Collections;
-import java.util.Optional;
-
-import lombok.extern.slf4j.Slf4j;
-import org.apache.flink.annotation.VisibleForTesting;
-import org.apache.flink.api.common.serialization.DeserializationSchema;
-import org.apache.flink.table.data.RowData;
-import org.apache.flink.util.StringUtils;
-
 import com.getindata.connectors.http.HttpPostRequestCallback;
 import com.getindata.connectors.http.internal.PollingClient;
 import com.getindata.connectors.http.internal.config.HttpConnectorConfigConstants;
 import com.getindata.connectors.http.internal.status.ComposeHttpStatusCodeChecker;
 import com.getindata.connectors.http.internal.status.ComposeHttpStatusCodeChecker.ComposeHttpStatusCodeCheckerConfig;
 import com.getindata.connectors.http.internal.status.HttpStatusCodeChecker;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import org.apache.flink.annotation.VisibleForTesting;
+import org.apache.flink.api.common.serialization.DeserializationSchema;
+import org.apache.flink.table.data.RowData;
+import org.apache.flink.util.StringUtils;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Optional;
 
 /**
- * An implementation of {@link PollingClient} that uses Java 11's {@link HttpClient}.
+ * An implementation of {@link PollingClient} that uses Java 11's {@link OkHttpClient}.
  * This implementation supports HTTP traffic only.
  */
 @Slf4j
-public class JavaNetHttpPollingClient implements PollingClient<RowData> {
+public class OkHttpPollingClient implements PollingClient<RowData> {
 
-    private final HttpClient httpClient;
+    private final OkHttpClient okHttpClient;
 
     private final HttpStatusCodeChecker statusCodeChecker;
 
@@ -37,13 +36,13 @@ public class JavaNetHttpPollingClient implements PollingClient<RowData> {
 
     private final HttpPostRequestCallback<HttpLookupSourceRequestEntry> httpPostRequestCallback;
 
-    public JavaNetHttpPollingClient(
-            HttpClient httpClient,
+    public OkHttpPollingClient(
+            OkHttpClient okHttpClient,
             DeserializationSchema<RowData> responseBodyDecoder,
             HttpLookupConfig options,
             HttpRequestFactory requestFactory) {
 
-        this.httpClient = httpClient;
+        this.okHttpClient = okHttpClient;
         this.responseBodyDecoder = responseBodyDecoder;
         this.requestFactory = requestFactory;
 
@@ -78,26 +77,26 @@ public class JavaNetHttpPollingClient implements PollingClient<RowData> {
     private Optional<RowData> queryAndProcess(RowData lookupData) throws Exception {
 
         HttpLookupSourceRequestEntry request = requestFactory.buildLookupRequest(lookupData);
-        HttpResponse<String> response = httpClient.send(
-            request.getHttpRequest(),
-            BodyHandlers.ofString()
-        );
+        Response response = okHttpClient.newCall(request.getHttpRequest()).execute();
+
         return processHttpResponse(response, request);
     }
 
     private Optional<RowData> processHttpResponse(
-            HttpResponse<String> response,
+            Response response,
             HttpLookupSourceRequestEntry request) throws IOException {
+
+        ResponseBody body = response.peekBody(Long.MAX_VALUE);
 
         this.httpPostRequestCallback.call(response, request, "endpoint", Collections.emptyMap());
 
         if (response == null) {
-            log.warn("Null Http response for request " + request.getHttpRequest().uri().toString());
+            log.warn("Null Http response for request " + request.getHttpRequest().url().toString());
             return Optional.empty();
         }
 
-        String responseBody = response.body();
-        int statusCode = response.statusCode();
+        String responseBody = body.string();
+        int statusCode = response.code();
 
         log.debug("Received {} status code for RestTableSource Request", statusCode);
         if (notErrorCodeAndNotEmptyBody(responseBody, statusCode)) {

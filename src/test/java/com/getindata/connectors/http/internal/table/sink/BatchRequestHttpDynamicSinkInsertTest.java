@@ -1,11 +1,5 @@
 package com.getindata.connectors.http.internal.table.sink;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -19,12 +13,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import java.io.File;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static com.getindata.connectors.http.TestHelper.readTestFile;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import static com.getindata.connectors.http.TestHelper.readTestFile;
 
 public class BatchRequestHttpDynamicSinkInsertTest {
 
@@ -177,13 +178,13 @@ public class BatchRequestHttpDynamicSinkInsertTest {
     private void verifyRequests(String expectedResponse) {
         ObjectMapper mapper = new ObjectMapper();
 
-        var postedRequests = wireMockServer.findAll(anyRequestedFor(urlPathEqualTo("/myendpoint")))
+        List<String> postedRequests = wireMockServer.findAll(anyRequestedFor(urlPathEqualTo("/myendpoint")))
             .stream()
             .map(LoggedRequest::getBodyAsString)
             .map(content -> getJsonSipleString(mapper, content))
             .collect(Collectors.toList());
 
-        var expectedResponses =
+        List<String> expectedResponses =
             Arrays.stream(readTestFile("/json/sink/" + expectedResponse).split("#-----#"))
                 .map(content -> getJsonSipleString(mapper, content)).collect(Collectors.toList());
 
@@ -227,10 +228,10 @@ public class BatchRequestHttpDynamicSinkInsertTest {
         final String insert = "INSERT INTO http VALUES ('Clee'), ('John')";
         tEnv.executeSql(insert).await();
 
-        var postedRequests = wireMockServer.findAll(anyRequestedFor(urlPathEqualTo("/myendpoint")));
+        List<LoggedRequest> postedRequests = wireMockServer.findAll(anyRequestedFor(urlPathEqualTo("/myendpoint")));
         assertEquals(1, postedRequests.size());
 
-        var request = postedRequests.get(0);
+        LoggedRequest request = postedRequests.get(0);
         assertEquals("[Clee,John]", request.getBodyAsString());
         assertEquals(RequestMethod.POST, request.getMethod());
         assertEquals(contentTypeHeaderValue, request.getHeader("Content-Type"));
@@ -269,10 +270,10 @@ public class BatchRequestHttpDynamicSinkInsertTest {
         final String insert = "INSERT INTO http VALUES ('Clee'), ('John')";
         tEnv.executeSql(insert).await();
 
-        var postedRequests = wireMockServer.findAll(anyRequestedFor(urlPathEqualTo("/myendpoint")));
+        List<LoggedRequest> postedRequests = wireMockServer.findAll(anyRequestedFor(urlPathEqualTo("/myendpoint")));
         assertEquals(1, postedRequests.size());
 
-        var request = postedRequests.get(0);
+        LoggedRequest request = postedRequests.get(0);
         assertEquals("[Clee,John]", request.getBodyAsString());
         assertEquals(RequestMethod.POST, request.getMethod());
         assertEquals(contentTypeHeaderValue, request.getHeader("Content-Type"));
@@ -325,11 +326,11 @@ public class BatchRequestHttpDynamicSinkInsertTest {
             + "TIMESTAMP '2021-08-24 15:22:59')";
         tEnv.executeSql(insert).await();
 
-        var postedRequests =
+        List<LoggedRequest> postedRequests =
             wireMockServer.findAll(anyRequestedFor(urlPathEqualTo("/myendpoint")));
         assertEquals(1, postedRequests.size());
 
-        var request = postedRequests.get(0);
+        LoggedRequest request = postedRequests.get(0);
         assertEquals(
             "[{\"id\":1,\"first_name\":\"Ninette\",\"last_name\":\"Clee\","
                 + "\"gender\":\"Female\",\"stock\":\"CDZI\",\"currency\":\"RUB\","
